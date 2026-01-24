@@ -1,12 +1,12 @@
 ---
-name: Delta IROPS AI Solution
-overview: Build a comprehensive Irregular Operations (IROPS) solution targeting Delta Airlines' 2024 operational failures using Snowflake AI Data Cloud. Features include AI-powered crew recovery (eliminating the "12-minute bottleneck"), Dynamic Tables (solving synchronicity lag and "ghost flights"), Contract Bot (PWA validation), predictive analytics, and interactive dashboards. Goal - Reduce Delta's recovery time from 5 days to 5 hours and demonstrate $50-100M annual savings potential.
+name: Phantom IROPS AI Solution
+overview: Build a comprehensive Irregular Operations (IROPS) solution targeting Phantom Airlines' 2024 operational failures using Snowflake AI Data Cloud. Features include AI-powered crew recovery (eliminating the "12-minute bottleneck"), Dynamic Tables (solving synchronicity lag and "ghost flights"), Contract Bot (PWA validation), predictive analytics, and interactive dashboards. Goal - Reduce Phantom's recovery time from 5 days to 5 hours and demonstrate $50-100M annual savings potential.
 todos:
   - id: setup-snowflake-env
-    content: Set up Snowflake database structure (DELTA_IROPS database with RAW, STAGING, ANALYTICS, ML_MODELS, SEMANTIC_MODELS schemas)
+    content: Set up Snowflake database structure (PHANTOM_IROPS database with RAW, STAGING, ANALYTICS, ML_MODELS, SEMANTIC_MODELS schemas)
     status: pending
   - id: create-dynamic-tables
-    content: Create Dynamic Tables for real-time Golden Record (crew status, aircraft location, flight status) to solve Delta's synchronicity lag problem
+    content: Create Dynamic Tables for real-time Golden Record (crew status, aircraft location, flight status) to solve Phantom's synchronicity lag problem
     status: pending
     dependencies:
       - setup-snowflake-env
@@ -37,7 +37,7 @@ todos:
     dependencies:
       - build-dbt-models
   - id: build-contract-bot
-    content: Build Contract Bot using Cortex AI to parse Delta Pilot Working Agreement (PWA) and validate crew assignments for FAA and union compliance
+    content: Build Contract Bot using Cortex AI to parse Phantom Pilot Working Agreement (PWA) and validate crew assignments for FAA and union compliance
     status: pending
     dependencies:
       - implement-cortex-ai
@@ -72,7 +72,7 @@ todos:
       - develop-ml-models
       - implement-cortex-ai
   - id: create-demo-materials
-    content: Prepare demo script, presentation materials, and pre-configured Delta-specific scenarios (CrowdStrike replay, ATL winter storm, maintenance surprise) with ROI calculator
+    content: Prepare demo script, presentation materials, and pre-configured Phantom-specific scenarios (CrowdStrike replay, ATL winter storm, maintenance surprise) with ROI calculator
     status: pending
     dependencies:
       - build-streamlit-dashboard
@@ -80,13 +80,13 @@ todos:
       - develop-notebooks
 ---
 
-# Delta Airlines IROPS AI Solution on Snowflake
+# Phantom Airlines IROPS AI Solution on Snowflake
 
 ## Overview
 
-Build an enterprise-grade Irregular Operations (IROPS) management platform that showcases Snowflake's AI/ML capabilities to address Delta's most critical operational challenges: disruption prediction, real-time recovery optimization, and cost reduction.
+Build an enterprise-grade Irregular Operations (IROPS) management platform that showcases Snowflake's AI/ML capabilities to address Phantom's most critical operational challenges: disruption prediction, real-time recovery optimization, and cost reduction.
 
-**Delta-Specific Context:** Delta's recent high-profile operational meltdowns—notably the 2024 CrowdStrike outage and 2025 winter storm recoveries—revealed critical gaps in their legacy systems. While flight operations systems recovered, crew tracking software (ARCOS) failed under load, forcing manual pilot calls and creating a 5-day recovery lag. This POC demonstrates how Snowflake transforms "reactive fire-fighting" into "proactive resilience" by eliminating data silos and enabling AI-driven crew recovery.
+**Phantom-Specific Context:** Phantom's recent high-profile operational meltdowns—notably the 2024 CrowdStrike outage and 2025 winter storm recoveries—revealed critical gaps in their legacy systems. While flight operations systems recovered, crew tracking software (ARCOS) failed under load, forcing manual pilot calls and creating a 5-day recovery lag. This POC demonstrates how Snowflake transforms "reactive fire-fighting" into "proactive resilience" by eliminating data silos and enabling AI-driven crew recovery.
 
 ## Solution Architecture
 
@@ -141,7 +141,7 @@ graph TB
 
 ### 1.1 Database Setup
 
-- Create `DELTA_IROPS` database with schema structure:
+- Create `PHANTOM_IROPS` database with schema structure:
   - `RAW` schema for ingested data
   - `STAGING` schema for intermediate transformations
   - `ANALYTICS` schema for business-ready views
@@ -150,9 +150,9 @@ graph TB
 
 ### 1.1a Dynamic Tables for Real-Time "Golden Record"
 
-**Solving Delta's "Synchronicity Lag" Problem:**
+**Solving Phantom's "Synchronicity Lag" Problem:**
 
-Delta's 2024 outage revealed that when systems reboot, different databases (Crew, Aircraft, Passenger, Maintenance) fail to resynchronize in real-time, leading to "ghost flights" where crews are assigned to planes at different airports.
+Phantom's 2024 outage revealed that when systems reboot, different databases (Crew, Aircraft, Passenger, Maintenance) fail to resynchronize in real-time, leading to "ghost flights" where crews are assigned to planes at different airports.
 
 **Solution:**
 
@@ -176,7 +176,7 @@ Enable secure data sharing with external partners without moving data:
 
 ### 1.2 Synthetic Data Generation
 
-Build realistic datasets mimicking Delta's operational environment:
+Build realistic datasets mimicking Phantom's operational environment:
 
 **Flight Operations Data:**
 
@@ -280,11 +280,11 @@ Leverage Snowflake Cortex AI SQL functions:
 
 ### 2.3 "Contract Bot" - Legal Crew Assignment Validator
 
-**The Critical Gap:** During the 2024 CrowdStrike outage, Delta crew schedulers manually verified complex union rules, leading to errors and "illegal" assignments that had to be unwound, further delaying recovery.
+**The Critical Gap:** During the 2024 CrowdStrike outage, Phantom crew schedulers manually verified complex union rules, leading to errors and "illegal" assignments that had to be unwound, further delaying recovery.
 
 **Solution:**
 
-- Use Cortex AI (`SNOWFLAKE.CORTEX.COMPLETE`) to parse the Delta Pilot Working Agreement (PWA)
+- Use Cortex AI (`SNOWFLAKE.CORTEX.COMPLETE`) to parse the Phantom Pilot Working Agreement (PWA)
 - Create an AI-powered validation layer that checks every proposed crew reassignment against:
   - FAA duty time limits (14 CFR Part 117)
   - Union contract rest requirements
@@ -330,7 +330,7 @@ Create interactive Streamlit app: [`streamlit/irops_dashboard.py`](streamlit/iro
 
 4. **Recovery Optimization (THE HERO FEATURE):**
 
-   - **"Contract Bot" - AI PWA Parser:** Uses Cortex AI to parse the 500+ page Delta Pilot Working Agreement in real-time to ensure all crew reassignments are contract-legal
+   - **"Contract Bot" - AI PWA Parser:** Uses Cortex AI to parse the 500+ page Phantom Pilot Working Agreement in real-time to ensure all crew reassignments are contract-legal
    - **"One-Click Recovery" Button:** Eliminates the "12-Minute Bottleneck" by batch-notifying the top-ranked available pilots simultaneously instead of sequential calling
    - **"Ghost Planes" Visualization:** Real-time map showing planes without crews vs. available crew locations, highlighting synchronicity gaps
    - **Crew Recovery Optimizer:** ML-based ranking of "best fit" crew based on:
@@ -343,7 +343,7 @@ Create interactive Streamlit app: [`streamlit/irops_dashboard.py`](streamlit/iro
    - Passenger rebooking strategies prioritized by Medallion status
    - Cost comparison of mitigation options with ROI projections
 
-**Delta-Specific Value:** Reduce recovery time from 5 days to 5 hours by eliminating manual pilot calling
+**Phantom-Specific Value:** Reduce recovery time from 5 days to 5 hours by eliminating manual pilot calling
 
 5. **Cost Analysis:**
 
@@ -460,7 +460,7 @@ Create step-by-step demo flow: [`demo/demo_script.md`](demo/demo_script.md)
 - Use case documentation
 - Performance metrics
 - Cost-benefit analysis
-- Implementation roadmap for Delta
+- Implementation roadmap for Phantom
 
 ### 6.3 Video Demonstrations
 
@@ -482,7 +482,7 @@ Create step-by-step demo flow: [`demo/demo_script.md`](demo/demo_script.md)
 
 ### Snowflake Features Showcased
 
-- **Dynamic Tables:** Real-time "Golden Record" with sub-second synchronization (solves Delta's "ghost flights" problem)
+- **Dynamic Tables:** Real-time "Golden Record" with sub-second synchronization (solves Phantom's "ghost flights" problem)
 - **Snowpipe Streaming:** Live aircraft telemetry and crew status ingestion
 - **Data Clean Rooms:** Secure partner collaboration with TSA, airports, and ground services
 - **Native ML model training and deployment:** Cortex ML for predictive analytics
@@ -493,11 +493,11 @@ Create step-by-step demo flow: [`demo/demo_script.md`](demo/demo_script.md)
 - **Time travel:** What-if analysis on historical disruptions
 - **Snowgrid:** High availability even during regional cloud outages
 
-## Success Metrics for Delta Outreach
+## Success Metrics for Phantom Outreach
 
 **The Compelling Message:**
 
-> "Delta, you're the world's most reliable airline—until the system breaks. In 2024, your technology became your bottleneck. With Snowflake, your data doesn't just record the crisis—it solves it. We move your recovery time from 5 days to 5 hours by eliminating the manual calling nightmare and the data silos that create ghost flights."
+> "Phantom, you're the world's most reliable airline—until the system breaks. In 2024, your technology became your bottleneck. With Snowflake, your data doesn't just record the crisis—it solves it. We move your recovery time from 5 days to 5 hours by eliminating the manual calling nightmare and the data silos that create ghost flights."
 
 **Operational Impact:**
 
@@ -508,7 +508,7 @@ Create step-by-step demo flow: [`demo/demo_script.md`](demo/demo_script.md)
 
 **Financial Impact:**
 
-- **$50-100M annual savings potential** for Delta's scale (IROPS costs Delta ~$100M+ annually)
+- **$50-100M annual savings potential** for Phantom's scale (IROPS costs Phantom ~$100M+ annually)
 - **60% reduction in passenger compensation costs** through proactive rebooking and personalized communication
 - **ROI within 6-9 months** of deployment
 - **Reduced brand damage:** Faster recovery = fewer viral social media complaints
@@ -519,7 +519,7 @@ Create step-by-step demo flow: [`demo/demo_script.md`](demo/demo_script.md)
 - **Resilience by Design:** Snowgrid ensures operations continue even during regional cloud outages (addressing CrowdStrike-style failures)
 - **Native integration:** Works with existing SABRE, ARCOS, Salesforce systems via Dynamic Tables
 - **Enterprise-grade security and governance** for sensitive crew and passenger data
-- **Scales to Delta's 200M+ annual passengers** and 5,000+ daily flights
+- **Scales to Phantom's 200M+ annual passengers** and 5,000+ daily flights
 
 ## Project Structure
 
@@ -599,7 +599,7 @@ Airlines-IROPS/
 ├── demo/
 │   ├── demo_script.md                # Demo walkthrough
 │   ├── presentation.pdf              # Executive presentation
-│   ├── roi_calculator.py             # ROI calculator for Delta
+│   ├── roi_calculator.py             # ROI calculator for Phantom
 │   └── scenarios/                    # Pre-configured demo scenarios
 │       ├── 01_crowdstrike_replay.json
 │       ├── 02_atl_winter_storm.json
@@ -613,11 +613,11 @@ The solution will be built incrementally with clear milestones to ensure quality
 
 ---
 
-# DELTA-SPECIFIC ADDENDUM: Targeted POC Strategy
+# PHANTOM-SPECIFIC ADDENDUM: Targeted POC Strategy
 
-## The Delta Reality: What Went Wrong in 2024
+## The Phantom Reality: What Went Wrong in 2024
 
-Your pitch must directly address Delta's operational crisis points that became public knowledge:
+Your pitch must directly address Phantom's operational crisis points that became public knowledge:
 
 ### 1. The "Crew-Tracking Meltdown"
 
@@ -656,7 +656,7 @@ Your pitch must directly address Delta's operational crisis points that became p
 - Implement Snowpipe Streaming for live data ingestion
 - Configure Data Clean Rooms for TSA/airport partner sharing
 
-**Deliverable:** Live dashboard showing unified view of airline operations that Delta's OCC doesn't have today
+**Deliverable:** Live dashboard showing unified view of airline operations that Phantom's OCC doesn't have today
 
 **Demo Message:** "Here's what your entire airline looks like on one screen during a crisis—no silos, no lag, no ghost flights."
 
@@ -667,7 +667,7 @@ Your pitch must directly address Delta's operational crisis points that became p
 **Activities:**
 
 - Use Cortex AI to build knowledge base of:
-  - Delta Pilot Working Agreement (PWA) key provisions
+  - Phantom Pilot Working Agreement (PWA) key provisions
   - FAA duty time limits (14 CFR Part 117)
   - Aircraft type qualification requirements
 - Create SQL functions that validate proposed crew assignments
@@ -702,12 +702,12 @@ Your pitch must directly address Delta's operational crisis points that became p
 
 ### Week 5: Executive Demo & ROI Calculator
 
-**Objective:** Package everything for Delta VP of Flight Operations
+**Objective:** Package everything for Phantom VP of Flight Operations
 
 **Activities:**
 
 - Build comprehensive Streamlit dashboard with all features
-- Create scenario walkthroughs based on real Delta outages:
+- Create scenario walkthroughs based on real Phantom outages:
   - 2024 CrowdStrike outage replay
   - 2025 ATL winter storm scenario
   - 2023 summer thunderstorm cascades
@@ -719,13 +719,13 @@ Your pitch must directly address Delta's operational crisis points that became p
 - Prepare executive presentation with architecture diagrams
 - Record demo videos (5-min executive, 15-min technical)
 
-**Deliverable:** Complete demo package ready for Delta C-suite
+**Deliverable:** Complete demo package ready for Phantom C-suite
 
 **Demo Message:** "Based on your 2024 outages, Snowflake would have saved you $50-100M and prevented a PR nightmare. Here's the architecture to make it happen."
 
-## Key Differentiation for Delta Outreach
+## Key Differentiation for Phantom Outreach
 
-| **The Legacy Problem (Delta Today)** | **The Snowflake Solution (Delta Tomorrow)** |
+| **The Legacy Problem (Phantom Today)** | **The Snowflake Solution (Phantom Tomorrow)** |
 
 |--------------------------------------|---------------------------------------------|
 
@@ -739,7 +739,7 @@ Your pitch must directly address Delta's operational crisis points that became p
 
 | **ARCOS Brittleness:** Legacy system fails under load during mass disruptions | **Snowflake Resilience:** Cloud-native architecture with Snowgrid for regional failover |
 
-## Technical Architecture: "Delta Resilience Cloud"
+## Technical Architecture: "Phantom Resilience Cloud"
 
 ### Layer 1: Data Ingestion (Unifying the Silos)
 
@@ -805,7 +805,7 @@ graph LR
 
 ## The Closing Pitch
 
-> "Delta executives, your airline doesn't have a people problem or a weather problem. You have a **data synchronization problem**. When ARCOS fails, your data becomes your enemy. Snowflake makes it your superpower.
+> "Phantom executives, your airline doesn't have a people problem or a weather problem. You have a **data synchronization problem**. When ARCOS fails, your data becomes your enemy. Snowflake makes it your superpower.
 
 >
 
@@ -823,9 +823,9 @@ graph LR
 
 ## Next Steps for Implementation
 
-1. **Secure Delta sponsor:** Target VP of Flight Operations or CIO
+1. **Secure Phantom sponsor:** Target VP of Flight Operations or CIO
 2. **Data access:** Request sanitized snapshots of past IROPS events
 3. **Snowflake environment:** Provision enterprise account with Cortex services enabled
 4. **Team assembly:** Data engineers, ML engineers, Streamlit developers
 5. **Timeline:** 5-week sprint to demo-ready POC
-6. **Success criteria:** Live demo to Delta C-suite showing $50M+ savings potential
+6. **Success criteria:** Live demo to Phantom C-suite showing $50M+ savings potential
