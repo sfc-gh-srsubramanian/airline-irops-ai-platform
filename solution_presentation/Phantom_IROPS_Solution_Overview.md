@@ -242,12 +242,12 @@ RAW → STAGING (5 DTs) → INTERMEDIATE (2 DTs) → ANALYTICS (3 DTs)
 
 ## Future Roadmap
 
-### Phase 2 (Q2 2025)
+### Phase 2 (Q2 2026)
 - Real-time ADS-B aircraft tracking integration
 - Passenger rebooking optimization
 - Proactive disruption prediction (6-hour horizon)
 
-### Phase 3 (Q3 2025)
+### Phase 3 (Q3 2026)
 - Multi-airline codeshare coordination
 - FAA/DOT compliance reporting automation
 - Customer sentiment analysis from social media
