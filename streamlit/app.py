@@ -1,12 +1,12 @@
 """
-Phantom Airlines IROPS Dashboard
+Phantom Airlines IROPS Platform
 ================================
 Main Streamlit application for the IROPS Operations Control Center
 """
 import streamlit as st
 
 st.set_page_config(
-    page_title="Phantom Airlines IROPS",
+    page_title="Phantom Airlines IROPS Platform",
     page_icon="✈️",
     layout="wide",
     initial_sidebar_state="expanded"
@@ -95,8 +95,8 @@ st.markdown(f"""
 
 st.markdown("""
 <div class="main-header">
-    <h1>✈️ Phantom Control Center</h1>
-    <p>AI-Powered Irregular Operations Management Platform</p>
+    <h1>✈️ Phantom Airlines IROPS Platform</h1>
+    <p>AI-Powered Irregular Operations Management</p>
 </div>
 """, unsafe_allow_html=True)
 

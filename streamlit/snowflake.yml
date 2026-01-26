@@ -6,7 +6,7 @@ entities:
       name: IROPS_DASHBOARD
       schema: ANALYTICS
       database: PHANTOM_IROPS
-    title: "Phantom Airlines IROPS Dashboard"
+    title: "Phantom Airlines IROPS Platform"
     query_warehouse: PHANTOM_IROPS_WH
     main_file: app.py
     pages_dir: pages/
