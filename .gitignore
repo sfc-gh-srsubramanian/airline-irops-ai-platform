@@ -1,0 +1,27 @@
+# AI coding rules - keep local only
+ai_coding_rules
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+.env
+.venv
+env/
+venv/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+.DS_Store
+
+# Logs
+*.log
+
+# Credentials
+.env.local
+credentials.json
