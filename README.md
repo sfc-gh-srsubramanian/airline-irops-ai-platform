@@ -101,10 +101,13 @@ cd Airlines-IROPS
 
 ### Launch Dashboard
 
+The Streamlit app is deployed to Snowflake:
 ```bash
 cd streamlit
-streamlit run app.py
+snow streamlit deploy --connection <connection_name> --replace
 ```
+
+**Note**: When running in Streamlit in Snowflake (SiS), use the **sidebar navigation** to switch between pages. Programmatic navigation (`st.switch_page`) is not supported in SiS.
 
 ### Cleanup
 
@@ -123,7 +126,8 @@ The platform generates Phantom-scale synthetic data:
 | Crew | 40,000 | 15K pilots + 25K flight attendants |
 | Flights | 500,000 | 365 days of operations |
 | Disruptions | 50,000 | Weather, mechanical, crew, ATC events |
-| Passengers | 200,000 | With loyalty tiers |
+| Passengers | 200,000 | With loyalty tiers (Diamond, Platinum, Gold, Silver, Blue) |
+| Bookings | 56,800+ | Including guaranteed elite members on disrupted flights daily |
 | Maintenance Logs | 100,000 | Unstructured text for AI parsing |
 | Weather | 130,000 | 90 days × all airports |
 
@@ -146,10 +150,12 @@ The platform generates Phantom-scale synthetic data:
 - Automatic assignment validation
 - Prevents union grievances and legal violations
 
-### 4. Intelligence Agents
-- **PHANTOM_OPERATIONS_AGENT**: Main OCC assistant
-- **CREW_RECOVERY_AGENT**: Crew scheduling specialist
-- **COST_ANALYSIS_AGENT**: Financial impact expert
+### 4. Intelligence Agent
+- **IROPS_ASSISTANT**: Main operations intelligence agent with:
+  - Cortex Analyst for quantitative analytics (text-to-SQL)
+  - Cortex Search for historical incidents and maintenance knowledge
+  - 30+ sample questions for common operations queries
+  - Registered with Snowflake Intelligence for seamless access
 
 ### 5. Historical Pattern Matching
 - Cortex Search over past IROPS events
@@ -215,10 +221,8 @@ Airlines-IROPS/
 - `MART_CREW_RECOVERY_CANDIDATES` - Pre-ranked crew list
 - `MART_OPERATIONAL_SUMMARY` - Real-time metrics
 
-### Intelligence Agents
-- `PHANTOM_OPERATIONS_AGENT`
-- `CREW_RECOVERY_AGENT`
-- `COST_ANALYSIS_AGENT`
+### Intelligence Agent
+- `IROPS_ASSISTANT` - Main operations agent with Cortex Analyst + Cortex Search
 
 ### Cortex Search Services
 - `IROPS_INCIDENT_SEARCH`

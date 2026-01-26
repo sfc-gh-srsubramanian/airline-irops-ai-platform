@@ -13,10 +13,13 @@ This guide provides a structured walkthrough for demonstrating the Phantom Airli
    ./deploy.sh
    ```
 
-2. **Start Streamlit dashboard**:
+2. **Start Streamlit dashboard** (deployed to Snowflake):
    ```bash
-   cd streamlit && streamlit run app.py
+   cd streamlit && snow streamlit deploy --replace
    ```
+   Or access directly in Snowsight: `PHANTOM_IROPS.ANALYTICS.IROPS_DASHBOARD`
+   
+   **Note**: In Streamlit in Snowflake (SiS), use the **sidebar** to navigate between pages.
 
 3. **Open Snowsight** in a separate browser tab for SQL queries
 
@@ -50,9 +53,10 @@ This guide provides a structured walkthrough for demonstrating the Phantom Airli
 **Purpose:** Show how we eliminate ghost flights
 
 **Steps:**
-1. Open the **main dashboard** (`app.py`)
-2. Point to the "Ghost Flights" metric (should show some)
-3. Click into **Ghost Planes Detection** page
+1. Open the **Streamlit app** in Snowsight or via URL
+2. Use the **sidebar** to navigate to different pages (Home, Operations Dashboard, Crew Recovery, etc.)
+3. Point to the "Ghost Flights" metric on the home page
+4. Click **Ghost Planes** in the sidebar
 4. Show a specific ghost flight:
    - "This flight PH1234 shows Captain Smith assigned, departing from ATL"
    - "But look - the captain is actually in Chicago!"
@@ -125,15 +129,17 @@ SELECT ML_MODELS.CONTRACT_BOT_QUERY('What is the maximum FDP for a 6am report?')
 **Purpose:** Demonstrate conversational AI for operations
 
 **Steps:**
-1. Navigate to **Intelligence Agent** page
-2. Ask several questions:
+1. Navigate to **Intelligence Agent** page via sidebar
+2. Use the IROPS_ASSISTANT agent or Snowflake Intelligence UI
+3. Ask several questions:
    - "What is our on-time performance today?"
    - "How many active disruptions do we have?"
+   - "Who are my Diamond loyalty members impacted by delays today?"
    - "Find historical incidents similar to a winter storm"
 
-3. Show how the agent:
-   - Queries the semantic views
-   - Searches historical incidents
+4. Show how the agent:
+   - Uses Cortex Analyst for quantitative queries (text-to-SQL)
+   - Searches historical incidents via Cortex Search
    - Provides actionable recommendations
 
 **Key Message:** *"Operations managers can get answers in natural language instead of writing SQL or navigating multiple systems."*
@@ -165,11 +171,11 @@ SELECT ML_MODELS.CONTRACT_BOT_QUERY('What is the maximum FDP for a 6am report?')
 
 **Steps:**
 1. Show the Snowsight Data panel:
-   - 7 schemas
-   - 17 RAW tables
+   - 7 schemas (RAW, STAGING, INTERMEDIATE, ANALYTICS, ML_MODELS, SEMANTIC_MODELS, CORTEX_SEARCH)
+   - 17 RAW tables (including BOOKINGS with elite loyalty coverage)
    - 10 Dynamic Tables
-   - 4 Semantic Views
-   - 3 Cortex Agents
+   - 1 Semantic View (IROPS_ANALYTICS)
+   - 1 Cortex Agent (IROPS_ASSISTANT) with 2 Cortex Search services
 
 2. Run a Dynamic Table status query:
    ```sql

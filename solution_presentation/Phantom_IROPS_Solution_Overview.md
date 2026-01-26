@@ -66,8 +66,8 @@ Phantom Airlines IROPS Platform addresses these challenges with:
 ╠═══════════════════════════════════════════════════════════════════════════╣
 ║                         RAW DATA LAYER                                    ║
 ║  ┌────────┐┌────────┐┌────────┐┌────────┐┌────────┐┌────────┐┌────────┐  ║
-║  │Flights ││  Crew  ││Aircraft││ Weather││Disrupt.││ Maint. ││History │  ║
-║  │ 500K   ││  40K   ││  1000  ││  130K  ││  50K   ││  100K  ││   5    │  ║
+║  │Flights ││  Crew  ││Aircraft││ Weather││Disrupt.││Bookings││History │  ║
+║  │ 500K   ││  40K   ││  1000  ││  130K  ││  50K   ││  57K   ││   5    │  ║
 ║  └────────┘└────────┘└────────┘└────────┘└────────┘└────────┘└────────┘  ║
 ╚═══════════════════════════════════════════════════════════════════════════╝
 ```
@@ -148,13 +148,18 @@ END AS is_ghost_flight
 
 ### 4. Intelligence Agents
 
-Three specialized Cortex Agents provide conversational access to operational data:
+The **IROPS_ASSISTANT** Intelligence Agent provides conversational access to operational data:
 
-| Agent | Purpose | Sample Query |
-|-------|---------|--------------|
-| Operations Agent | General OCC assistant | "What is our OTP today?" |
-| Crew Recovery Agent | Crew scheduling expert | "Find captains qualified on B737 at ATL" |
-| Cost Analysis Agent | Financial impact | "What is the cost of cancelling vs delaying?" |
+| Tool | Purpose | Sample Query |
+|------|---------|--------------|
+| Cortex Analyst (irops_analytics) | Quantitative analytics via text-to-SQL | "What is our OTP today?" |
+| Cortex Search (incident_search) | Historical incident pattern matching | "Find similar winter storm incidents" |
+| Cortex Search (maintenance_search) | Maintenance procedures lookup | "How do I handle an engine fault code?" |
+
+**Loyalty Impact Queries:**
+- "Who are my top tier loyalty members impacted by delays today?"
+- "Show me elite passengers affected by cancellations"
+- "Which Diamond members have the longest delays?"
 
 ### 5. Historical Pattern Matching
 
