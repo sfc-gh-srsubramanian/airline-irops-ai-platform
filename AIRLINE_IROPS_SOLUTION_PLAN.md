@@ -20,8 +20,8 @@ todos:
     status: pending
     dependencies:
       - setup-snowflake-env
-  - id: build-dbt-models
-    content: Develop dbt transformation models (staging, intermediate, and mart layers) with data quality tests
+  - id: build-dynamic-table-pipeline
+    content: Build chained Dynamic Tables pipeline (staging → intermediate → marts) with data quality checks
     status: pending
     dependencies:
       - generate-synthetic-data
@@ -30,12 +30,12 @@ todos:
     content: Build ML models for delay prediction, cascading impact, and cost estimation using Cortex ML
     status: pending
     dependencies:
-      - build-dbt-models
+      - build-dynamic-table-pipeline
   - id: implement-cortex-ai
     content: Implement Cortex AI functions (AI_CLASSIFY, AI_COMPLETE, AI_SIMILARITY) for disruption analysis
     status: pending
     dependencies:
-      - build-dbt-models
+      - build-dynamic-table-pipeline
   - id: build-contract-bot
     content: Build Contract Bot using Cortex AI to parse Phantom Pilot Working Agreement (PWA) and validate crew assignments for FAA and union compliance
     status: pending
@@ -51,7 +51,7 @@ todos:
     content: Create semantic model YAML and semantic views for Cortex Analyst integration
     status: pending
     dependencies:
-      - build-dbt-models
+      - build-dynamic-table-pipeline
   - id: build-streamlit-dashboard
     content: Develop comprehensive Streamlit dashboard with all pages (overview, monitor, alerts, crew recovery with One-Click button, Ghost Planes visualization, cost analysis, scenarios, Contract Bot interface)
     status: pending
@@ -71,8 +71,30 @@ todos:
     dependencies:
       - develop-ml-models
       - implement-cortex-ai
-  - id: create-demo-materials
-    content: Prepare demo script, presentation materials, and pre-configured Phantom-specific scenarios (CrowdStrike replay, ATL winter storm, maintenance surprise) with ROI calculator
+  - id: create-shell-scripts
+    content: Create deploy.sh (one-click deployment), clean.sh (teardown), and run.sh (validation/demo) scripts
+    status: pending
+    dependencies:
+      - setup-snowflake-env
+  - id: create-readme
+    content: Write comprehensive README.md with WHY section, quick start, what gets deployed, key features, sample queries, and ROI summary
+    status: pending
+    dependencies:
+      - build-streamlit-dashboard
+      - create-intelligence-agent
+  - id: create-solution-overview
+    content: Write solution_presentation/Phantom_IROPS_Solution_Overview.md with executive summary, business challenge, solution architecture, capabilities, and ROI calculations
+    status: pending
+    dependencies:
+      - build-streamlit-dashboard
+      - create-intelligence-agent
+  - id: create-presentation-guide
+    content: Write solution_presentation/Phantom_IROPS_Presentation_Guide.md with demo script, talking points, scenario walkthroughs, and Q&A prep
+    status: pending
+    dependencies:
+      - create-solution-overview
+  - id: create-demo-scenarios
+    content: Create pre-configured demo scenarios (CrowdStrike replay, ATL winter storm, maintenance surprise) as JSON files with ROI calculator
     status: pending
     dependencies:
       - build-streamlit-dashboard
@@ -224,13 +246,19 @@ Build realistic datasets mimicking Phantom's operational environment:
 - NOTAM (Notice to Airmen) information
 - Airport capacity constraints
 
-### 1.3 Data Modeling with dbt
+### 1.3 Data Modeling with Chained Dynamic Tables
 
-- Create dbt project structure: [`dbt_project/dbt_project.yml`](dbt_project/dbt_project.yml)
-- Build staging models for data cleansing
-- Create fact tables: `fact_flights`, `fact_disruptions`, `fact_crew_assignments`
-- Create dimension tables: `dim_aircraft`, `dim_airports`, `dim_crew`, `dim_passengers`
-- Implement data quality tests
+- Build **staging Dynamic Tables** for data cleansing and validation
+- Create **intermediate Dynamic Tables** for business logic joins:
+  - `INT_CREW_AIRCRAFT_STATUS` - Crew + Aircraft unified view
+  - `INT_FLIGHT_DISRUPTION_IMPACT` - Flights + Disruptions + Passenger impact
+- Create **mart Dynamic Tables** for analytics:
+  - `MART_FLIGHTS` - Enriched flight data with predictions
+  - `MART_DISRUPTIONS` - Disruption events with severity and cost
+  - `MART_CREW_ASSIGNMENTS` - Crew assignments with legality status
+  - `MART_GOLDEN_RECORD` - Unified operational view (THE KEY TABLE)
+- Implement data quality checks via SQL assertions and Cortex AI validation
+- All transformations run with sub-second latency via Dynamic Table refresh
 
 ## Phase 2: AI/ML Predictive Analytics
 
@@ -360,7 +388,7 @@ Create interactive Streamlit app: [`streamlit/irops_dashboard.py`](streamlit/iro
 
 ### 3.2 Semantic Model Configuration
 
-Create semantic YAML for Cortex Analyst: [`dbt_project/semantic_models/irops_model.yaml`](dbt_project/semantic_models/irops_model.yaml)
+Create semantic YAML for Cortex Analyst: [`semantic_models/irops_model.yaml`](semantic_models/irops_model.yaml)
 
 Define business entities:
 
@@ -476,7 +504,7 @@ Create step-by-step demo flow: [`demo/demo_script.md`](demo/demo_script.md)
 - **Snowflake Cortex AI Functions:** AI_CLASSIFY, AI_COMPLETE, AI_SIMILARITY
 - **Snowflake Intelligence:** Conversational agents with semantic models
 - **Cortex Search:** Document and incident retrieval
-- **dbt:** Data transformation and semantic layer
+- **Dynamic Tables:** Chained transformations with sub-second latency (replaces dbt for real-time needs)
 - **Streamlit:** Interactive dashboards
 - **Python 3.11:** Notebooks and data generation scripts (using Anaconda channel)
 
@@ -525,86 +553,124 @@ Create step-by-step demo flow: [`demo/demo_script.md`](demo/demo_script.md)
 
 ```
 Airlines-IROPS/
-├── README.md                          # Project overview and setup
+├── deploy.sh                          # One-click deployment script
+├── clean.sh                           # Teardown/cleanup script
+├── run.sh                             # Validation/demo runner script
+├── README.md                          # Project overview, quick start, what gets deployed
+├── DEPLOYMENT_GUIDE.md                # Detailed deployment instructions
 ├── docs/
-│   ├── architecture.md                # Solution architecture
-│   ├── data_model.md                  # Data model documentation
-│   └── deployment_guide.md            # Deployment instructions
+│   ├── architecture.md                # Technical architecture deep-dive
+│   └── data_model.md                  # Data model documentation
+├── solution_presentation/
+│   ├── Phantom_IROPS_Solution_Overview.md        # Business-focused solution overview
+│   ├── Phantom_IROPS_Presentation_Guide.md       # Demo script and talking points
+│   ├── images/                                    # Architecture diagrams (Snowflake blue/white theme)
+│   │   ├── architecture_overview.png
+│   │   ├── golden_record_flow.png
+│   │   ├── crew_recovery_flow.png
+│   │   ├── ghost_planes_viz.png
+│   │   └── roi_calculator.png
+│   └── generate_images.py                        # Diagram generation (uses Snowflake brand colors)
 ├── scripts/
-│   ├── sql/
-│   │   ├── setup/
-│   │   │   ├── 01_create_database.sql    # Database and schema setup
-│   │   │   ├── 02_create_tables.sql      # Table definitions
-│   │   │   ├── 03_create_dynamic_tables.sql  # Dynamic Tables for Golden Record
-│   │   │   ├── 04_create_views.sql       # Analytical views
-│   │   │   └── 05_setup_data_clean_rooms.sql # Data Clean Rooms config
-│   │   ├── synthetic_data/
-│   │   │   ├── generate_flights.sql      # Flight data generation
-│   │   │   ├── generate_disruptions.sql  # Disruption event generation
-│   │   │   ├── generate_crew.sql         # Crew data generation
-│   │   │   ├── generate_passengers.sql   # Passenger data generation
-│   │   │   └── generate_weather.sql      # Weather data generation
-│   │   ├── ml_models/
-│   │   │   ├── delay_prediction.sql      # Delay prediction model
-│   │   │   ├── cost_impact.sql           # Cost impact model
-│   │   │   ├── network_impact.sql        # Cascading impact model
-│   │   │   └── crew_ranking_model.sql    # Crew "best fit" ranking model
-│   │   ├── cortex_ai/
-│   │   │   ├── classification_examples.sql    # AI_CLASSIFY examples
-│   │   │   ├── completion_examples.sql        # AI_COMPLETE examples
-│   │   │   ├── similarity_search.sql          # AI_SIMILARITY examples
-│   │   │   └── contract_bot.sql               # Contract Bot PWA validation
-│   │   ├── create_semantic_view.sql      # Semantic view definition
-│   │   ├── create_cortex_search.sql      # Cortex search service
-│   │   ├── create_agent.sql              # Intelligence agent
-│   │   └── create_snowpipe_streaming.sql # Snowpipe Streaming config
-│   └── python/
-│       ├── data_generators/              # Synthetic data generation
-│       │   ├── flight_generator.py
-│       │   ├── disruption_generator.py
-│       │   └── crew_generator.py
-│       └── utils/
-│           └── snowflake_connector.py
-├── dbt_project/
-│   ├── dbt_project.yml
-│   ├── models/
-│   │   ├── staging/                  # Staging models
-│   │   ├── intermediate/             # Intermediate transformations
-│   │   └── marts/                    # Business-ready models
-│   └── semantic_models/
-│       └── irops_model.yaml          # Semantic model for Cortex
+│   ├── 01_account_setup.sql           # Database, roles, warehouse setup
+│   ├── 02_schema_setup.sql            # Tables, views, base structure
+│   ├── 03_data_generation.sql         # Synthetic data generation (all-in-one)
+│   ├── 04_dynamic_tables.sql          # Dynamic Tables pipeline (staging→intermediate→marts)
+│   ├── 05_semantic_views.sql          # Semantic views for Cortex Analyst
+│   ├── 06_intelligence_agents.sql     # Cortex Search + Intelligence Agents
+│   ├── 07_ml_models.sql               # ML models (delay prediction, crew ranking, cost)
+│   ├── 08_cortex_ai_functions.sql     # AI_CLASSIFY, AI_COMPLETE, AI_SIMILARITY, Contract Bot
+│   └── 09_sample_queries.sql          # Demo queries and validation
+├── streamlit/
+│   ├── irops_dashboard.py             # Main dashboard app
+│   └── pages/
+│       ├── 1_Disruption_Monitor.py
+│       ├── 2_Predictive_Alerts.py
+│       ├── 3_Crew_Recovery_OneClick.py    # THE HERO FEATURE
+│       ├── 4_Ghost_Planes_Visualization.py
+│       ├── 5_Cost_Analysis.py
+│       ├── 6_Scenario_Planning.py
+│       └── 7_Contract_Bot_Interface.py
 ├── notebooks/
 │   ├── 01_data_exploration.ipynb
 │   ├── 02_ml_model_development.ipynb
 │   ├── 03_cortex_ai_functions.ipynb
 │   ├── 04_cost_optimization.ipynb
-│   ├── 05_crew_recovery_optimization.ipynb  # THE HERO FEATURE
+│   ├── 05_crew_recovery_optimization.ipynb
 │   └── 06_network_impact.ipynb
-├── streamlit/
-│   ├── irops_dashboard.py            # Main dashboard app
-│   ├── pages/
-│   │   ├── 1_Disruption_Monitor.py
-│   │   ├── 2_Predictive_Alerts.py
-│   │   ├── 3_Crew_Recovery_OneClick.py   # THE HERO FEATURE
-│   │   ├── 4_Ghost_Planes_Visualization.py
-│   │   ├── 5_Cost_Analysis.py
-│   │   ├── 6_Scenario_Planning.py
-│   │   └── 7_Contract_Bot_Interface.py
-│   └── utils/
-│       ├── data_loader.py
-│       ├── visualizations.py
-│       ├── calculations.py
-│       ├── crew_optimizer.py         # Crew ranking ML logic
-│       └── batch_notification.py     # Batch pilot notification system
 ├── demo/
-│   ├── demo_script.md                # Demo walkthrough
-│   ├── presentation.pdf              # Executive presentation
-│   ├── roi_calculator.py             # ROI calculator for Phantom
-│   └── scenarios/                    # Pre-configured demo scenarios
+│   └── scenarios/                     # Pre-configured demo scenarios
 │       ├── 01_crowdstrike_replay.json
 │       ├── 02_atl_winter_storm.json
 │       └── 03_maintenance_surprise.json
-└── requirements.txt                  # Python dependencies
+└── requirements.txt                   # Python dependencies
+```
+
+## Documentation Structure
+
+### README.md
+Primary entry point with:
+- **WHY** section (Phantom's 2024 failures, the business problem)
+- **QUICK START** (3-step deployment)
+- **What Gets Deployed** (databases, tables, volumes, agents)
+- **Key Features** (One-Click Recovery, Contract Bot, Ghost Planes)
+- **Sample Queries** and validation commands
+- **ROI Summary** ($50-100M savings potential)
+
+### solution_presentation/Phantom_IROPS_Solution_Overview.md
+Business-focused document covering:
+- Executive Summary (the 5-day → 5-hour value prop)
+- The Business Challenge (Phantom's 2024 operational failures)
+- The Solution Architecture (Golden Record, Contract Bot, Crew Recovery)
+- Key Capabilities by Phase
+- Technical Deep-Dive (Dynamic Tables, Cortex AI, ML Models)
+- Success Metrics and ROI Calculations
+- Implementation Roadmap
+
+### solution_presentation/Phantom_IROPS_Presentation_Guide.md
+Demo script with:
+- Pre-demo setup checklist
+- Scene-by-scene walkthrough
+- Key talking points per feature
+- Objection handling
+- Live demo scenarios (CrowdStrike replay, ATL storm, maintenance surprise)
+- Q&A preparation
+
+### Design Guidelines
+
+**Snowflake Brand Colors (use for all diagrams/visualizations):**
+- **Primary Blue**: `#29B5E8` (Snowflake cyan)
+- **Dark Blue**: `#1E3A5F` (headers, text)
+- **Light Blue**: `#E8F4FC` (backgrounds)
+- **White**: `#FFFFFF` (cards, containers)
+- **Accent**: `#0D47A1` (deep blue for emphasis)
+- **Gray**: `#6E7681` (secondary text)
+
+Apply to: Architecture diagrams, Mermaid charts, Streamlit themes, presentation slides, README badges.
+
+### Shell Scripts
+
+**deploy.sh** - One-click deployment:
+```bash
+./deploy.sh                      # Full deployment
+./deploy.sh -c prod              # Use 'prod' connection
+./deploy.sh --prefix DEV         # Deploy with DEV_ prefix
+./deploy.sh --skip-agents        # Skip agent creation
+./deploy.sh --only-data          # Regenerate data only
+```
+
+**clean.sh** - Teardown:
+```bash
+./clean.sh                       # Full teardown
+./clean.sh -c prod               # Teardown prod environment
+./clean.sh --keep-data           # Keep data, remove agents/apps
+```
+
+**run.sh** - Validation & Demo:
+```bash
+./run.sh                         # Run all validations
+./run.sh --scenario crowdstrike  # Run CrowdStrike replay scenario
+./run.sh --streamlit             # Launch Streamlit dashboard
 ```
 
 ## Implementation Todos

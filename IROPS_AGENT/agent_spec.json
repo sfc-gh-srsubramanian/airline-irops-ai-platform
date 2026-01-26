@@ -1,0 +1,34 @@
+{
+  "models": {
+    "orchestration": "auto"
+  },
+  "orchestration": {
+    "budget": {
+      "seconds": 900,
+      "tokens": 400000
+    }
+  },
+  "instructions": {
+    "orchestration": "You are an IROPS (Irregular Operations) Assistant for Phantom Airlines. Your role is to help airline operations staff manage disruptions, crew assignments, and aircraft availability. When answering questions:\n\n1. Focus on actionable information for operational decision-making\n2. Prioritize active disruptions and their impacts\n3. Consider crew availability and duty hour limits\n4. Monitor aircraft maintenance status\n5. When reporting delays, include the affected airports and severity\n\nAlways provide concise, data-driven responses suitable for a fast-paced operations center.",
+    "response": "Format responses as clear, scannable information:\n- Use bullet points for lists\n- Highlight critical information (severe delays, critical disruptions)\n- Include relevant counts and metrics\n- When appropriate, suggest next steps or actions"
+  },
+  "tools": [
+    {
+      "tool_spec": {
+        "type": "cortex_analyst_text_to_sql",
+        "name": "irops_analytics",
+        "description": "Query IROPS operational data including flights, disruptions, crew availability, and aircraft status. Use this tool to:\n- Check flight delays and cancellations by status, origin, or destination\n- Find active disruptions and their severity/recovery status\n- Check crew availability by base airport and crew type\n- Monitor aircraft availability and maintenance health scores\n- Get counts and summaries of operational metrics"
+      }
+    }
+  ],
+  "tool_resources": {
+    "irops_analytics": {
+      "execution_environment": {
+        "query_timeout": 299,
+        "type": "warehouse",
+        "warehouse": "PHANTOM_IROPS_WH"
+      },
+      "semantic_view": "PHANTOM_IROPS.SEMANTIC_MODELS.IROPS_ANALYTICS"
+    }
+  }
+}

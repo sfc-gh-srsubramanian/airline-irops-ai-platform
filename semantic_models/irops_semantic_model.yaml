@@ -1,0 +1,986 @@
+name: phantom_irops_analytics
+description: |
+  Semantic model for Phantom Airlines IROPS (Irregular Operations) platform.
+  Enables natural language queries about flights, disruptions, crew, and aircraft
+  to support operational decision-making during irregular operations.
+
+tables:
+  - name: FLIGHTS
+    description: |
+      Flight operations data including schedules, delays, and status.
+      Use this table to analyze flight performance, delays, and operational metrics.
+    base_table:
+      database: PHANTOM_IROPS
+      schema: STAGING
+      table: STG_FLIGHTS
+    primary_key:
+      columns:
+        - FLIGHT_ID
+
+    dimensions:
+      - name: flight_id
+        description: Unique identifier for each flight
+        expr: FLIGHT_ID
+        data_type: TEXT
+        unique: true
+
+      - name: flight_number
+        description: Commercial flight number (e.g., PH101)
+        expr: FLIGHT_NUMBER
+        data_type: TEXT
+        sample_values:
+          - "PH101"
+          - "PH202"
+          - "PH303"
+
+      - name: origin
+        description: Origin airport IATA code
+        expr: ORIGIN
+        data_type: TEXT
+        sample_values:
+          - "LAX"
+          - "JFK"
+          - "ORD"
+          - "DFW"
+
+      - name: destination
+        description: Destination airport IATA code
+        expr: DESTINATION
+        data_type: TEXT
+        sample_values:
+          - "LAX"
+          - "JFK"
+          - "ORD"
+          - "DFW"
+
+      - name: aircraft_id
+        description: Aircraft identifier assigned to flight
+        expr: AIRCRAFT_ID
+        data_type: TEXT
+
+      - name: tail_number
+        description: Aircraft tail number (registration)
+        expr: TAIL_NUMBER
+        data_type: TEXT
+
+      - name: aircraft_type_code
+        description: Aircraft type code (e.g., A320, B737-800)
+        expr: AIRCRAFT_TYPE_CODE
+        data_type: TEXT
+        sample_values:
+          - "A320"
+          - "B737-800"
+          - "A321"
+          - "B737-MAX9"
+
+      - name: status
+        description: Current flight status
+        expr: STATUS
+        data_type: TEXT
+        sample_values:
+          - "SCHEDULED"
+          - "DELAYED"
+          - "DEPARTED"
+          - "ARRIVED"
+          - "CANCELLED"
+
+      - name: delay_category
+        description: Category of delay severity
+        expr: DELAY_CATEGORY
+        data_type: TEXT
+        sample_values:
+          - "ON_TIME"
+          - "MINOR_DELAY"
+          - "MODERATE_DELAY"
+          - "SEVERE_DELAY"
+          - "CANCELLED"
+
+      - name: delay_code
+        description: IATA delay code
+        expr: DELAY_CODE
+        data_type: TEXT
+
+      - name: delay_reason
+        description: Description of delay reason
+        expr: DELAY_REASON
+        data_type: TEXT
+
+      - name: flight_timeframe
+        description: Whether flight is today, tomorrow, future, or historical
+        expr: FLIGHT_TIMEFRAME
+        data_type: TEXT
+        sample_values:
+          - "TODAY"
+          - "TOMORROW"
+          - "FUTURE"
+          - "HISTORICAL"
+
+      - name: has_aircraft_assigned
+        description: Whether aircraft is assigned to this flight
+        expr: HAS_AIRCRAFT_ASSIGNED
+        data_type: BOOLEAN
+
+      - name: has_captain_assigned
+        description: Whether captain is assigned to this flight
+        expr: HAS_CAPTAIN_ASSIGNED
+        data_type: BOOLEAN
+
+      - name: has_fo_assigned
+        description: Whether first officer is assigned to this flight
+        expr: HAS_FO_ASSIGNED
+        data_type: BOOLEAN
+
+      - name: is_codeshare
+        description: Whether this is a codeshare flight
+        expr: IS_CODESHARE
+        data_type: BOOLEAN
+
+    time_dimensions:
+      - name: flight_date
+        description: Date of the flight
+        expr: FLIGHT_DATE
+        data_type: DATE
+
+      - name: scheduled_departure
+        description: Scheduled departure time in UTC
+        expr: SCHEDULED_DEPARTURE_UTC
+        data_type: TIMESTAMP
+
+      - name: scheduled_arrival
+        description: Scheduled arrival time in UTC
+        expr: SCHEDULED_ARRIVAL_UTC
+        data_type: TIMESTAMP
+
+      - name: actual_departure
+        description: Actual departure time in UTC
+        expr: ACTUAL_DEPARTURE_UTC
+        data_type: TIMESTAMP
+
+      - name: actual_arrival
+        description: Actual arrival time in UTC
+        expr: ACTUAL_ARRIVAL_UTC
+        data_type: TIMESTAMP
+
+    facts:
+      - name: departure_delay_minutes
+        description: Departure delay in minutes (positive = late)
+        expr: DEPARTURE_DELAY_MINUTES
+        data_type: NUMBER
+
+      - name: arrival_delay_minutes
+        description: Arrival delay in minutes (positive = late)
+        expr: ARRIVAL_DELAY_MINUTES
+        data_type: NUMBER
+
+      - name: block_time_scheduled_min
+        description: Scheduled block time in minutes
+        expr: BLOCK_TIME_SCHEDULED_MIN
+        data_type: NUMBER
+
+      - name: block_time_actual_min
+        description: Actual block time in minutes
+        expr: BLOCK_TIME_ACTUAL_MIN
+        data_type: NUMBER
+
+      - name: distance_nm
+        description: Flight distance in nautical miles
+        expr: DISTANCE_NM
+        data_type: NUMBER
+
+      - name: passengers_booked
+        description: Number of passengers booked on flight
+        expr: PASSENGERS_BOOKED
+        data_type: NUMBER
+
+      - name: passengers_checked_in
+        description: Number of passengers checked in
+        expr: PASSENGERS_CHECKED_IN
+        data_type: NUMBER
+
+      - name: load_factor
+        description: Passenger load factor (0-1)
+        expr: LOAD_FACTOR
+        data_type: NUMBER
+
+  - name: DISRUPTIONS
+    description: |
+      Operational disruptions including weather, mechanical, crew issues.
+      Use this table to analyze disruption patterns, impacts, and recovery status.
+    base_table:
+      database: PHANTOM_IROPS
+      schema: STAGING
+      table: STG_DISRUPTIONS
+    primary_key:
+      columns:
+        - DISRUPTION_ID
+
+    dimensions:
+      - name: disruption_id
+        description: Unique identifier for each disruption
+        expr: DISRUPTION_ID
+        data_type: TEXT
+        unique: true
+
+      - name: flight_id
+        description: Associated flight ID (if flight-specific)
+        expr: FLIGHT_ID
+        data_type: TEXT
+
+      - name: flight_number
+        description: Associated flight number
+        expr: FLIGHT_NUMBER
+        data_type: TEXT
+
+      - name: disruption_type
+        description: Type of disruption
+        expr: DISRUPTION_TYPE
+        data_type: TEXT
+        sample_values:
+          - "WEATHER"
+          - "MECHANICAL"
+          - "CREW"
+          - "ATC"
+          - "SECURITY"
+
+      - name: disruption_subtype
+        description: Subtype providing more detail
+        expr: DISRUPTION_SUBTYPE
+        data_type: TEXT
+
+      - name: severity
+        description: Severity level of disruption
+        expr: SEVERITY
+        data_type: TEXT
+        sample_values:
+          - "MINOR"
+          - "MODERATE"
+          - "SEVERE"
+          - "CRITICAL"
+
+      - name: affected_airport
+        description: Airport code affected by disruption
+        expr: AFFECTED_AIRPORT
+        data_type: TEXT
+
+      - name: affected_city
+        description: City name affected by disruption
+        expr: AFFECTED_CITY
+        data_type: TEXT
+
+      - name: recovery_status
+        description: Current recovery status
+        expr: RECOVERY_STATUS
+        data_type: TEXT
+        sample_values:
+          - "PENDING"
+          - "IN_PROGRESS"
+          - "RESOLVED"
+          - "ESCALATED"
+
+      - name: is_active
+        description: Whether disruption is currently active
+        expr: IS_ACTIVE
+        data_type: BOOLEAN
+
+      - name: root_cause
+        description: Root cause analysis
+        expr: ROOT_CAUSE
+        data_type: TEXT
+
+      - name: resolution
+        description: Resolution description
+        expr: RESOLUTION
+        data_type: TEXT
+
+    time_dimensions:
+      - name: start_time
+        description: When the disruption started
+        expr: START_TIME_UTC
+        data_type: TIMESTAMP
+
+      - name: end_time
+        description: When the disruption ended
+        expr: END_TIME_UTC
+        data_type: TIMESTAMP
+
+      - name: flight_date
+        description: Associated flight date
+        expr: FLIGHT_DATE
+        data_type: DATE
+
+    facts:
+      - name: duration_minutes
+        description: Reported duration in minutes
+        expr: DURATION_MINUTES
+        data_type: NUMBER
+
+      - name: actual_duration_minutes
+        description: Actual/calculated duration in minutes
+        expr: ACTUAL_DURATION_MINUTES
+        data_type: NUMBER
+
+      - name: impact_flights_count
+        description: Number of flights impacted
+        expr: IMPACT_FLIGHTS_COUNT
+        data_type: NUMBER
+
+      - name: impact_passengers_count
+        description: Number of passengers impacted
+        expr: IMPACT_PASSENGERS_COUNT
+        data_type: NUMBER
+
+      - name: estimated_cost_usd
+        description: Estimated cost in USD
+        expr: ESTIMATED_COST_USD
+        data_type: NUMBER
+
+      - name: actual_cost_usd
+        description: Actual cost in USD
+        expr: ACTUAL_COST_USD
+        data_type: NUMBER
+
+      - name: reported_cost_usd
+        description: Reported cost (actual or estimated)
+        expr: REPORTED_COST_USD
+        data_type: NUMBER
+
+      - name: severity_score
+        description: Numeric severity score (0-100)
+        expr: SEVERITY_SCORE
+        data_type: NUMBER
+
+      - name: urgency_score
+        description: Numeric urgency score (0-100)
+        expr: URGENCY_SCORE
+        data_type: NUMBER
+
+      - name: priority_score
+        description: Combined priority score (0-100)
+        expr: PRIORITY_SCORE
+        data_type: NUMBER
+
+  - name: CREW
+    description: |
+      Crew member information including availability and duty hours.
+      Use this table to find available crew, check qualifications, and manage duty limits.
+    base_table:
+      database: PHANTOM_IROPS
+      schema: STAGING
+      table: STG_CREW
+    primary_key:
+      columns:
+        - CREW_ID
+
+    dimensions:
+      - name: crew_id
+        description: Unique identifier for crew member
+        expr: CREW_ID
+        data_type: TEXT
+        unique: true
+
+      - name: employee_id
+        description: Employee ID number
+        expr: EMPLOYEE_ID
+        data_type: TEXT
+
+      - name: full_name
+        description: Full name of crew member
+        expr: FULL_NAME
+        data_type: TEXT
+
+      - name: first_name
+        description: First name
+        expr: FIRST_NAME
+        data_type: TEXT
+
+      - name: last_name
+        description: Last name
+        expr: LAST_NAME
+        data_type: TEXT
+
+      - name: crew_type
+        description: Type of crew member
+        expr: CREW_TYPE
+        data_type: TEXT
+        sample_values:
+          - "CAPTAIN"
+          - "FIRST_OFFICER"
+          - "FLIGHT_ATTENDANT"
+          - "PURSER"
+
+      - name: base_airport
+        description: Home base airport code
+        expr: BASE_AIRPORT
+        data_type: TEXT
+        sample_values:
+          - "LAX"
+          - "JFK"
+          - "ORD"
+          - "DFW"
+
+      - name: status
+        description: Current crew member status
+        expr: STATUS
+        data_type: TEXT
+        sample_values:
+          - "ACTIVE"
+          - "ON_LEAVE"
+          - "TRAINING"
+          - "INACTIVE"
+
+      - name: availability_status
+        description: Current availability for assignment
+        expr: AVAILABILITY_STATUS
+        data_type: TEXT
+        sample_values:
+          - "AVAILABLE"
+          - "UNAVAILABLE"
+          - "NEAR_MONTHLY_LIMIT"
+
+      - name: qualified_aircraft_types
+        description: Comma-separated list of qualified aircraft types
+        expr: QUALIFIED_AIRCRAFT_TYPES
+        data_type: TEXT
+
+      - name: union_member
+        description: Whether crew member is a union member
+        expr: UNION_MEMBER
+        data_type: BOOLEAN
+
+    time_dimensions:
+      - name: hire_date
+        description: Date crew member was hired
+        expr: HIRE_DATE
+        data_type: DATE
+
+    facts:
+      - name: seniority_number
+        description: Seniority ranking number
+        expr: SENIORITY_NUMBER
+        data_type: NUMBER
+
+      - name: years_of_service
+        description: Years of service with airline
+        expr: YEARS_OF_SERVICE
+        data_type: NUMBER
+
+      - name: active_type_ratings
+        description: Number of active aircraft type ratings
+        expr: ACTIVE_TYPE_RATINGS
+        data_type: NUMBER
+
+      - name: flight_hours_last_7_days
+        description: Flight hours in last 7 days
+        expr: FLIGHT_HOURS_LAST_7_DAYS
+        data_type: NUMBER
+
+      - name: duty_hours_last_7_days
+        description: Duty hours in last 7 days
+        expr: DUTY_HOURS_LAST_7_DAYS
+        data_type: NUMBER
+
+      - name: duty_days_last_7_days
+        description: Number of duty days in last 7 days
+        expr: DUTY_DAYS_LAST_7_DAYS
+        data_type: NUMBER
+
+      - name: current_month_hours
+        description: Flight hours this month
+        expr: CURRENT_MONTH_HOURS
+        data_type: NUMBER
+
+      - name: monthly_hours_remaining
+        description: Hours remaining until monthly limit
+        expr: MONTHLY_HOURS_REMAINING
+        data_type: NUMBER
+
+      - name: current_year_hours
+        description: Flight hours this year
+        expr: CURRENT_YEAR_HOURS
+        data_type: NUMBER
+
+      - name: annual_hours_remaining
+        description: Hours remaining until annual limit
+        expr: ANNUAL_HOURS_REMAINING
+        data_type: NUMBER
+
+  - name: CREW_RECOVERY_CANDIDATES
+    description: |
+      Pre-computed crew candidates for One-Click Recovery system.
+      Use this table to find available crew to assign to flights needing captain or first officer.
+      This is the primary table for crew swap and replacement tracking queries.
+    base_table:
+      database: PHANTOM_IROPS
+      schema: ANALYTICS
+      table: MART_CREW_RECOVERY_CANDIDATES
+    primary_key:
+      columns:
+        - FLIGHT_ID
+        - CREW_ID
+        - REQUIRED_ROLE
+
+    dimensions:
+      - name: flight_id
+        description: Unique identifier for the flight needing crew
+        expr: FLIGHT_ID
+        data_type: TEXT
+
+      - name: flight_number
+        description: Commercial flight number (e.g., PH101)
+        expr: FLIGHT_NUMBER
+        data_type: TEXT
+
+      - name: origin
+        description: Origin airport IATA code
+        expr: ORIGIN
+        data_type: TEXT
+
+      - name: destination
+        description: Destination airport IATA code
+        expr: DESTINATION
+        data_type: TEXT
+
+      - name: aircraft_type_code
+        description: Aircraft type code required for this flight
+        expr: AIRCRAFT_TYPE_CODE
+        data_type: TEXT
+
+      - name: crew_id
+        description: Unique identifier for crew member
+        expr: CREW_ID
+        data_type: TEXT
+
+      - name: crew_name
+        description: Full name of the crew candidate
+        expr: CREW_NAME
+        data_type: TEXT
+
+      - name: required_role
+        description: Role needed - CAPTAIN or FIRST_OFFICER
+        expr: REQUIRED_ROLE
+        data_type: TEXT
+        sample_values:
+          - "CAPTAIN"
+          - "FIRST_OFFICER"
+
+      - name: crew_base
+        description: Home base airport of the crew member
+        expr: CREW_BASE
+        data_type: TEXT
+
+      - name: phone_number
+        description: Crew member contact phone number
+        expr: PHONE_NUMBER
+        data_type: TEXT
+
+      - name: email
+        description: Crew member email address
+        expr: EMAIL
+        data_type: TEXT
+
+      - name: is_type_qualified
+        description: Whether crew is qualified for the aircraft type
+        expr: IS_TYPE_QUALIFIED
+        data_type: BOOLEAN
+
+    time_dimensions:
+      - name: flight_date
+        description: Date of the flight
+        expr: FLIGHT_DATE
+        data_type: DATE
+
+      - name: scheduled_departure
+        description: Scheduled departure time in UTC
+        expr: SCHEDULED_DEPARTURE_UTC
+        data_type: TIMESTAMP
+
+      - name: calculated_at
+        description: When this candidate ranking was computed
+        expr: CALCULATED_AT
+        data_type: TIMESTAMP
+
+    facts:
+      - name: flight_priority
+        description: Priority score for the flight (higher = more urgent)
+        expr: FLIGHT_PRIORITY
+        data_type: NUMBER
+
+      - name: monthly_hours_remaining
+        description: Hours remaining in monthly duty limit
+        expr: MONTHLY_HOURS_REMAINING
+        data_type: NUMBER
+
+      - name: annual_hours_remaining
+        description: Hours remaining in annual duty limit
+        expr: ANNUAL_HOURS_REMAINING
+        data_type: NUMBER
+
+      - name: proximity_score
+        description: Score based on crew location (100=same airport)
+        expr: PROXIMITY_SCORE
+        data_type: NUMBER
+
+      - name: duty_hours_score
+        description: Score based on available duty hours
+        expr: DUTY_HOURS_SCORE
+        data_type: NUMBER
+
+      - name: fatigue_score
+        description: Score based on recent flight hours (higher=less fatigued)
+        expr: FATIGUE_SCORE
+        data_type: NUMBER
+
+      - name: ml_fit_score
+        description: Combined ML-based ranking score (0-100, higher is better)
+        expr: ML_FIT_SCORE
+        data_type: NUMBER
+
+      - name: candidate_rank
+        description: Rank of this candidate for the flight/role (1=best)
+        expr: CANDIDATE_RANK
+        data_type: NUMBER
+
+  - name: AIRCRAFT
+    description: |
+      Aircraft fleet information including status and maintenance health.
+      Use this table to check aircraft availability, maintenance status, and fleet composition.
+    base_table:
+      database: PHANTOM_IROPS
+      schema: STAGING
+      table: STG_AIRCRAFT
+    primary_key:
+      columns:
+        - AIRCRAFT_ID
+
+    dimensions:
+      - name: aircraft_id
+        description: Unique identifier for aircraft
+        expr: AIRCRAFT_ID
+        data_type: TEXT
+        unique: true
+
+      - name: tail_number
+        description: Aircraft tail number (registration)
+        expr: TAIL_NUMBER
+        data_type: TEXT
+
+      - name: aircraft_type_code
+        description: Aircraft type code
+        expr: AIRCRAFT_TYPE_CODE
+        data_type: TEXT
+        sample_values:
+          - "A320"
+          - "B737-800"
+          - "A321"
+          - "B737-MAX9"
+
+      - name: manufacturer
+        description: Aircraft manufacturer
+        expr: MANUFACTURER
+        data_type: TEXT
+        sample_values:
+          - "Airbus"
+          - "Boeing"
+
+      - name: model
+        description: Aircraft model
+        expr: MODEL
+        data_type: TEXT
+
+      - name: current_location
+        description: Current airport location code
+        expr: CURRENT_LOCATION
+        data_type: TEXT
+
+      - name: current_city
+        description: Current city name
+        expr: CURRENT_CITY
+        data_type: TEXT
+
+      - name: current_timezone
+        description: Current timezone
+        expr: CURRENT_TIMEZONE
+        data_type: TEXT
+
+      - name: status
+        description: Current aircraft status
+        expr: STATUS
+        data_type: TEXT
+        sample_values:
+          - "ACTIVE"
+          - "MAINTENANCE"
+          - "GROUNDED"
+
+      - name: is_operationally_available
+        description: Whether aircraft can be used for operations
+        expr: IS_OPERATIONALLY_AVAILABLE
+        data_type: BOOLEAN
+
+    time_dimensions:
+      - name: manufacture_date
+        description: Date aircraft was manufactured
+        expr: MANUFACTURE_DATE
+        data_type: DATE
+
+      - name: acquisition_date
+        description: Date aircraft was acquired by airline
+        expr: ACQUISITION_DATE
+        data_type: DATE
+
+      - name: last_maintenance_date
+        description: Date of last maintenance
+        expr: LAST_MAINTENANCE_DATE
+        data_type: DATE
+
+      - name: next_maintenance_due
+        description: Date next maintenance is due
+        expr: NEXT_MAINTENANCE_DUE
+        data_type: DATE
+
+    facts:
+      - name: seat_capacity
+        description: Total seat capacity
+        expr: SEAT_CAPACITY
+        data_type: NUMBER
+
+      - name: aircraft_range_nm
+        description: Maximum range in nautical miles
+        expr: AIRCRAFT_RANGE_NM
+        data_type: NUMBER
+
+      - name: aircraft_age_years
+        description: Age of aircraft in years
+        expr: AIRCRAFT_AGE_YEARS
+        data_type: NUMBER
+
+      - name: total_flight_hours
+        description: Total flight hours accumulated
+        expr: TOTAL_FLIGHT_HOURS
+        data_type: NUMBER
+
+      - name: total_cycles
+        description: Total takeoff/landing cycles
+        expr: TOTAL_CYCLES
+        data_type: NUMBER
+
+      - name: days_until_maintenance
+        description: Days until next scheduled maintenance
+        expr: DAYS_UNTIL_MAINTENANCE
+        data_type: NUMBER
+
+      - name: mel_items_count
+        description: Number of MEL (Minimum Equipment List) items
+        expr: MEL_ITEMS_COUNT
+        data_type: NUMBER
+
+      - name: maintenance_health_score
+        description: Overall maintenance health score (0-100)
+        expr: MAINTENANCE_HEALTH_SCORE
+        data_type: NUMBER
+
+      - name: open_maintenance_items
+        description: Number of open maintenance items
+        expr: OPEN_MAINTENANCE_ITEMS
+        data_type: NUMBER
+
+      - name: squawks_last_7_days
+        description: Number of squawks reported in last 7 days
+        expr: SQUAWKS_LAST_7_DAYS
+        data_type: NUMBER
+
+relationships:
+  - name: flight_to_disruption
+    left_table: FLIGHTS
+    right_table: DISRUPTIONS
+    relationship_columns:
+      - left_column: FLIGHT_ID
+        right_column: FLIGHT_ID
+    relationship_type: many_to_one
+
+  - name: flight_to_aircraft
+    left_table: FLIGHTS
+    right_table: AIRCRAFT
+    relationship_columns:
+      - left_column: AIRCRAFT_ID
+        right_column: AIRCRAFT_ID
+    relationship_type: many_to_one
+
+verified_queries:
+  - name: vqr_delayed_flights_today
+    question: How many flights are delayed today?
+    sql: |
+      SELECT COUNT(*) AS delayed_flight_count
+      FROM PHANTOM_IROPS.STAGING.STG_FLIGHTS
+      WHERE FLIGHT_DATE = CURRENT_DATE()
+        AND STATUS = 'DELAYED'
+
+  - name: vqr_active_disruptions
+    question: What are the active disruptions?
+    sql: |
+      SELECT 
+        DISRUPTION_ID,
+        DISRUPTION_TYPE,
+        SEVERITY,
+        AFFECTED_AIRPORT,
+        RECOVERY_STATUS,
+        START_TIME_UTC
+      FROM PHANTOM_IROPS.STAGING.STG_DISRUPTIONS
+      WHERE IS_ACTIVE = TRUE
+      ORDER BY PRIORITY_SCORE DESC
+
+  - name: vqr_available_crew_by_base
+    question: How many crew members are available at each base?
+    sql: |
+      SELECT 
+        BASE_AIRPORT,
+        CREW_TYPE,
+        COUNT(*) AS available_count
+      FROM PHANTOM_IROPS.STAGING.STG_CREW
+      WHERE AVAILABILITY_STATUS = 'AVAILABLE'
+      GROUP BY BASE_AIRPORT, CREW_TYPE
+      ORDER BY BASE_AIRPORT, CREW_TYPE
+
+  - name: vqr_aircraft_availability
+    question: How many aircraft are operationally available?
+    sql: |
+      SELECT 
+        AIRCRAFT_TYPE_CODE,
+        COUNT(*) AS total_aircraft,
+        SUM(CASE WHEN IS_OPERATIONALLY_AVAILABLE THEN 1 ELSE 0 END) AS available_count
+      FROM PHANTOM_IROPS.STAGING.STG_AIRCRAFT
+      GROUP BY AIRCRAFT_TYPE_CODE
+      ORDER BY AIRCRAFT_TYPE_CODE
+
+  - name: vqr_flights_by_status
+    question: Show me the count of flights by status for today
+    sql: |
+      SELECT 
+        STATUS,
+        COUNT(*) AS flight_count
+      FROM PHANTOM_IROPS.STAGING.STG_FLIGHTS
+      WHERE FLIGHT_DATE = CURRENT_DATE()
+      GROUP BY STATUS
+      ORDER BY flight_count DESC
+
+  - name: vqr_disruption_cost_summary
+    question: What is the total cost of disruptions by type?
+    sql: |
+      SELECT 
+        DISRUPTION_TYPE,
+        COUNT(*) AS disruption_count,
+        SUM(REPORTED_COST_USD) AS total_cost,
+        AVG(REPORTED_COST_USD) AS avg_cost
+      FROM PHANTOM_IROPS.STAGING.STG_DISRUPTIONS
+      GROUP BY DISRUPTION_TYPE
+      ORDER BY total_cost DESC NULLS LAST
+
+  - name: vqr_severe_delay_flights
+    question: Which flights have severe delays?
+    sql: |
+      SELECT 
+        FLIGHT_NUMBER,
+        FLIGHT_DATE,
+        ORIGIN,
+        DESTINATION,
+        DEPARTURE_DELAY_MINUTES,
+        DELAY_REASON
+      FROM PHANTOM_IROPS.STAGING.STG_FLIGHTS
+      WHERE DELAY_CATEGORY = 'SEVERE_DELAY'
+      ORDER BY DEPARTURE_DELAY_MINUTES DESC
+
+  - name: vqr_crew_near_limit
+    question: Which crew members are near their monthly hour limit?
+    sql: |
+      SELECT 
+        FULL_NAME,
+        CREW_TYPE,
+        BASE_AIRPORT,
+        CURRENT_MONTH_HOURS,
+        MONTHLY_HOURS_REMAINING
+      FROM PHANTOM_IROPS.STAGING.STG_CREW
+      WHERE AVAILABILITY_STATUS = 'NEAR_MONTHLY_LIMIT'
+      ORDER BY MONTHLY_HOURS_REMAINING ASC
+
+  - name: vqr_aircraft_maintenance_due
+    question: Which aircraft have maintenance due soon?
+    sql: |
+      SELECT 
+        TAIL_NUMBER,
+        AIRCRAFT_TYPE_CODE,
+        CURRENT_LOCATION,
+        NEXT_MAINTENANCE_DUE,
+        DAYS_UNTIL_MAINTENANCE,
+        MAINTENANCE_HEALTH_SCORE
+      FROM PHANTOM_IROPS.STAGING.STG_AIRCRAFT
+      WHERE DAYS_UNTIL_MAINTENANCE <= 7
+      ORDER BY DAYS_UNTIL_MAINTENANCE ASC
+
+  - name: vqr_passengers_affected_by_disruptions
+    question: How many passengers are affected by active disruptions?
+    sql: |
+      SELECT 
+        SUM(IMPACT_PASSENGERS_COUNT) AS total_passengers_affected
+      FROM PHANTOM_IROPS.STAGING.STG_DISRUPTIONS
+      WHERE IS_ACTIVE = TRUE
+
+  - name: vqr_crew_swap_candidates
+    question: What crew swap options are available for today's flights?
+    sql: |
+      SELECT 
+        FLIGHT_NUMBER,
+        ORIGIN,
+        DESTINATION,
+        REQUIRED_ROLE,
+        CREW_NAME,
+        CREW_BASE,
+        ML_FIT_SCORE,
+        IS_TYPE_QUALIFIED,
+        CANDIDATE_RANK
+      FROM PHANTOM_IROPS.ANALYTICS.MART_CREW_RECOVERY_CANDIDATES
+      WHERE FLIGHT_DATE = CURRENT_DATE()
+        AND CANDIDATE_RANK <= 5
+      ORDER BY FLIGHT_NUMBER, REQUIRED_ROLE, CANDIDATE_RANK
+
+  - name: vqr_flights_needing_crew
+    question: How many flights need crew replacement today?
+    sql: |
+      SELECT 
+        REQUIRED_ROLE,
+        COUNT(DISTINCT FLIGHT_ID) AS flights_needing_crew
+      FROM PHANTOM_IROPS.ANALYTICS.MART_CREW_RECOVERY_CANDIDATES
+      WHERE FLIGHT_DATE = CURRENT_DATE()
+      GROUP BY REQUIRED_ROLE
+
+  - name: vqr_best_crew_candidates
+    question: Who are the best crew candidates for crew replacement?
+    sql: |
+      SELECT 
+        FLIGHT_NUMBER,
+        ORIGIN,
+        DESTINATION,
+        REQUIRED_ROLE,
+        CREW_NAME,
+        CREW_BASE,
+        ML_FIT_SCORE,
+        MONTHLY_HOURS_REMAINING,
+        IS_TYPE_QUALIFIED
+      FROM PHANTOM_IROPS.ANALYTICS.MART_CREW_RECOVERY_CANDIDATES
+      WHERE FLIGHT_DATE = CURRENT_DATE()
+        AND CANDIDATE_RANK = 1
+      ORDER BY FLIGHT_PRIORITY DESC
+      LIMIT 20
+
+  - name: vqr_crew_swap_by_base
+    question: Which crew members at each base are available for swaps?
+    sql: |
+      SELECT 
+        CREW_BASE,
+        REQUIRED_ROLE,
+        COUNT(DISTINCT CREW_ID) AS available_crew,
+        COUNT(DISTINCT FLIGHT_ID) AS flights_they_can_cover
+      FROM PHANTOM_IROPS.ANALYTICS.MART_CREW_RECOVERY_CANDIDATES
+      WHERE FLIGHT_DATE = CURRENT_DATE()
+        AND IS_TYPE_QUALIFIED = TRUE
+        AND CANDIDATE_RANK <= 3
+      GROUP BY CREW_BASE, REQUIRED_ROLE
+      ORDER BY CREW_BASE, REQUIRED_ROLE
