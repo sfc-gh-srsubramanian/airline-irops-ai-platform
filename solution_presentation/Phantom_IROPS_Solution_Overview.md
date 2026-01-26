@@ -30,56 +30,9 @@ Phantom Airlines IROPS Platform addresses these challenges with:
 
 ## Architecture Overview
 
-```
-╔═══════════════════════════════════════════════════════════════════════════╗
-║                         RAW DATA LAYER                                    ║
-║  ┌────────┐┌────────┐┌────────┐┌────────┐┌────────┐┌────────┐┌────────┐  ║
-║  │Flights ││  Crew  ││Aircraft││ Weather││Disrupt.││Bookings││History │  ║
-║  │ 500K   ││  40K   ││  1000  ││  130K  ││  50K   ││  57K   ││   5    │  ║
-║  └───┬────┘└───┬────┘└───┬────┘└───┬────┘└───┬────┘└───┬────┘└───┬────┘  ║
-╠══════╪═════════╪═════════╪═════════╪═════════╪═════════╪═════════╪════════╣
-       │         │         │         │         │         │         │
-       ▼         ▼         ▼         ▼         ▼         ▼         ▼
-╔═══════════════════════════════════════════════════════════════════════════╗
-║                       DATA PIPELINE LAYER                                 ║
-║                    (Chained Dynamic Tables - 1 min lag)                   ║
-║                                                                           ║
-║  ┌────────────┐     ┌──────────────┐     ┌─────────────────────────────┐ ║
-║  │   STAGING  │ ──▶ │ INTERMEDIATE │ ──▶ │         ANALYTICS           │ ║
-║  │            │     │              │     │  ┌───────────────────────┐  │ ║
-║  │ • Flights  │     │ • Crew+      │     │  │    GOLDEN RECORD      │  │ ║
-║  │ • Crew     │     │   Aircraft   │     │  │ (Single Source of     │  │ ║
-║  │ • Aircraft │     │   Status     │     │  │  Truth - No Ghosts)   │  │ ║
-║  │ • Weather  │     │ • Flight+    │     │  └───────────────────────┘  │ ║
-║  │ • Disrupt. │     │   Disruption │     │  • Operational Summary      │ ║
-║  └────────────┘     └──────────────┘     │  • Crew Recovery Candidates │ ║
-║                                           └──────────────┬──────────────┘ ║
-╠══════════════════════════════════════════════════════════╪════════════════╣
-                                                           │
-                                                           ▼
-╔═══════════════════════════════════════════════════════════════════════════╗
-║                          AI/ML LAYER (Cortex)                             ║
-║  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐  ║
-║  │   Cortex     │  │ Intelligence │  │    ML        │  │   Semantic   │  ║
-║  │   Search     │  │    Agent     │  │   Models     │  │    View      │  ║
-║  │              │  │              │  │              │  │              │  ║
-║  │ • Incidents  │  │ • IROPS_     │  │ • Delay Pred │  │ • IROPS_     │  ║
-║  │ • Maintenance│  │   ASSISTANT  │  │ • Cost Est   │  │   ANALYTICS  │  ║
-║  │              │  │              │  │ • Crew Rank  │  │              │  ║
-║  └──────┬───────┘  └──────┬───────┘  └──────┬───────┘  └──────┬───────┘  ║
-╠═════════╪═════════════════╪═════════════════╪═════════════════╪══════════╣
-          │                 │                 │                 │
-          ▼                 ▼                 ▼                 ▼
-╔═══════════════════════════════════════════════════════════════════════════╗
-║                          PRESENTATION LAYER                               ║
-║  ┌─────────────────────────────────────────────────────────────────────┐ ║
-║  │                    STREAMLIT DASHBOARD                               │ ║
-║  │  • Operations Dashboard    • Disruption Analysis                    │ ║
-║  │  • Crew Recovery (1-Click) • Contract Bot                           │ ║
-║  │  • Ghost Planes Detection  • Intelligence Agent                     │ ║
-║  └─────────────────────────────────────────────────────────────────────┘ ║
-╚═══════════════════════════════════════════════════════════════════════════╝
-```
+![Airline IROPS AI Platform Architecture](images/architecture_diagram.jpg)
+
+*Transforming raw data into real-time intelligent action for optimized airline operations.*
 
 ---
 
