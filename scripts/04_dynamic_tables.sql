@@ -598,7 +598,7 @@ SELECT
     -- Today's flight summary
     (SELECT COUNT(*) FROM STAGING.STG_FLIGHTS WHERE flight_date = CURRENT_DATE()) AS total_flights_today,
     (SELECT COUNT(*) FROM STAGING.STG_FLIGHTS WHERE flight_date = CURRENT_DATE() AND status = 'ARRIVED') AS completed_flights,
-    (SELECT COUNT(*) FROM STAGING.STG_FLIGHTS WHERE flight_date = CURRENT_DATE() AND status IN ('SCHEDULED', 'BOARDING', 'DEPARTED', 'EN_ROUTE')) AS in_progress_flights,
+    (SELECT COUNT(*) FROM STAGING.STG_FLIGHTS WHERE flight_date = CURRENT_DATE() AND status = 'IN_FLIGHT') AS in_progress_flights,
     (SELECT COUNT(*) FROM STAGING.STG_FLIGHTS WHERE flight_date = CURRENT_DATE() AND status = 'DELAYED') AS delayed_flights,
     (SELECT COUNT(*) FROM STAGING.STG_FLIGHTS WHERE flight_date = CURRENT_DATE() AND status = 'CANCELLED') AS cancelled_flights,
     -- On-time performance

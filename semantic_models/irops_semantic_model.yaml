@@ -4,6 +4,42 @@ description: |
   Enables natural language queries about flights, disruptions, crew, and aircraft
   to support operational decision-making during irregular operations.
 
+custom_instructions: |
+  ## Business Definitions
+  
+  ### Hub Airports
+  Phantom Airlines operates 5 hub airports. When users ask about "hubs" or "hub airports", 
+  use these IATA codes: LAX (Los Angeles), JFK (New York), ORD (Chicago), DFW (Dallas), ATL (Atlanta).
+  Filter: origin IN ('LAX', 'JFK', 'ORD', 'DFW', 'ATL') OR destination IN ('LAX', 'JFK', 'ORD', 'DFW', 'ATL')
+  
+  ### On-Time Performance (OTP)
+  - A flight is considered "on-time" if it departs within 15 minutes of scheduled departure time
+  - OTP = (flights with departure_delay_minutes <= 15) / (total completed flights) * 100
+  - Only include flights with status = 'ARRIVED' when calculating OTP
+  - Calculate as: COUNT(CASE WHEN departure_delay_minutes <= 15 THEN 1 END) * 100.0 / COUNT(*)
+  - Filter WHERE status = 'ARRIVED' AND status != 'CANCELLED'
+  
+  ### Flight Statuses
+  - SCHEDULED: Flight not yet departed, more than 30 minutes until departure
+  - ON_TIME: Flight departing within 30 minutes, delay < 15 minutes
+  - DELAYED: Flight departing within 30 minutes, delay >= 15 minutes  
+  - IN_FLIGHT: Flight has departed but not yet arrived
+  - ARRIVED: Flight has landed at destination
+  - CANCELLED: Flight was cancelled
+  
+  ### Delay Categories
+  - ON_TIME: departure_delay_minutes <= 15 (industry standard A14 rule)
+  - MINOR_DELAY: 16-45 minutes late
+  - MODERATE_DELAY: 46-120 minutes late
+  - SEVERE_DELAY: More than 120 minutes late
+  
+  ### Common Query Patterns
+  - "Today's flights" = WHERE flight_date = CURRENT_DATE()
+  - "This week" = WHERE flight_date >= DATE_TRUNC('week', CURRENT_DATE())
+  - "Departing from [airport]" = WHERE origin = '[airport code]'
+  - "Arriving at [airport]" = WHERE destination = '[airport code]'
+  - "Performance by hub" = GROUP BY origin/destination for hub airports only
+
 tables:
   - name: FLIGHTS
     description: |
@@ -34,24 +70,36 @@ tables:
           - "PH303"
 
       - name: origin
-        description: Origin airport IATA code
+        description: Origin airport IATA code. Hub airports are LAX, JFK, ORD, DFW, ATL.
         expr: ORIGIN
         data_type: TEXT
+        synonyms:
+          - departure airport
+          - departing from
+          - from airport
+          - origin hub
         sample_values:
           - "LAX"
           - "JFK"
           - "ORD"
           - "DFW"
+          - "ATL"
 
       - name: destination
-        description: Destination airport IATA code
+        description: Destination airport IATA code. Hub airports are LAX, JFK, ORD, DFW, ATL.
         expr: DESTINATION
         data_type: TEXT
+        synonyms:
+          - arrival airport
+          - arriving at
+          - to airport
+          - destination hub
         sample_values:
           - "LAX"
           - "JFK"
           - "ORD"
           - "DFW"
+          - "ATL"
 
       - name: aircraft_id
         description: Aircraft identifier assigned to flight
@@ -74,13 +122,21 @@ tables:
           - "B737-MAX9"
 
       - name: status
-        description: Current flight status
+        description: |
+          Current flight status. SCHEDULED=awaiting departure, ON_TIME=departing soon with <15min delay,
+          DELAYED=departing soon with >=15min delay, IN_FLIGHT=currently airborne, ARRIVED=landed at destination,
+          CANCELLED=flight was cancelled.
         expr: STATUS
         data_type: TEXT
+        synonyms:
+          - flight status
+          - current status
+          - state
         sample_values:
           - "SCHEDULED"
+          - "ON_TIME"
           - "DELAYED"
-          - "DEPARTED"
+          - "IN_FLIGHT"
           - "ARRIVED"
           - "CANCELLED"
 
@@ -163,9 +219,16 @@ tables:
 
     facts:
       - name: departure_delay_minutes
-        description: Departure delay in minutes (positive = late)
+        description: |
+          Departure delay in minutes (positive = late, negative = early). 
+          A flight is considered on-time if delay <= 15 minutes (A14 industry standard).
+          Used to calculate On-Time Performance (OTP).
         expr: DEPARTURE_DELAY_MINUTES
         data_type: NUMBER
+        synonyms:
+          - delay
+          - late departure
+          - departure lateness
 
       - name: arrival_delay_minutes
         description: Arrival delay in minutes (positive = late)
@@ -201,6 +264,73 @@ tables:
         description: Passenger load factor (0-1)
         expr: LOAD_FACTOR
         data_type: NUMBER
+
+    metrics:
+      - name: total_flights
+        description: Total count of flights
+        expr: COUNT(*)
+      
+      - name: on_time_performance
+        description: |
+          On-Time Performance (OTP) percentage. A flight is on-time if departure delay <= 15 minutes.
+          Only calculated for arrived flights. Returns percentage from 0-100.
+        expr: ROUND(COUNT(CASE WHEN DEPARTURE_DELAY_MINUTES <= 15 THEN 1 END) * 100.0 / NULLIF(COUNT(*), 0), 1)
+        synonyms:
+          - OTP
+          - on time rate
+          - punctuality
+          - on-time percentage
+      
+      - name: delayed_flight_count
+        description: Count of flights with delay > 15 minutes
+        expr: COUNT(CASE WHEN DEPARTURE_DELAY_MINUTES > 15 THEN 1 END)
+        synonyms:
+          - late flights
+          - delayed count
+      
+      - name: average_delay_minutes
+        description: Average departure delay in minutes across all flights
+        expr: ROUND(AVG(DEPARTURE_DELAY_MINUTES), 1)
+        synonyms:
+          - avg delay
+          - mean delay
+      
+      - name: total_passengers
+        description: Total passengers across all flights
+        expr: SUM(PASSENGERS_BOOKED)
+      
+      - name: average_load_factor
+        description: Average passenger load factor as percentage
+        expr: ROUND(AVG(LOAD_FACTOR) * 100, 1)
+
+    filters:
+      - name: hub_departures
+        description: Flights departing from hub airports (LAX, JFK, ORD, DFW, ATL)
+        expr: ORIGIN IN ('LAX', 'JFK', 'ORD', 'DFW', 'ATL')
+      
+      - name: hub_arrivals
+        description: Flights arriving at hub airports (LAX, JFK, ORD, DFW, ATL)
+        expr: DESTINATION IN ('LAX', 'JFK', 'ORD', 'DFW', 'ATL')
+      
+      - name: today_flights
+        description: Flights scheduled for today
+        expr: FLIGHT_DATE = CURRENT_DATE()
+      
+      - name: arrived_flights
+        description: Flights that have completed (arrived at destination)
+        expr: STATUS = 'ARRIVED'
+      
+      - name: active_flights
+        description: Flights currently in progress (in-flight, on-time, delayed, scheduled)
+        expr: STATUS IN ('SCHEDULED', 'ON_TIME', 'DELAYED', 'IN_FLIGHT')
+      
+      - name: on_time_flights
+        description: Flights with departure delay of 15 minutes or less (industry A14 standard)
+        expr: DEPARTURE_DELAY_MINUTES <= 15
+      
+      - name: delayed_flights_filter
+        description: Flights with departure delay greater than 15 minutes
+        expr: DEPARTURE_DELAY_MINUTES > 15
 
   - name: DISRUPTIONS
     description: |
@@ -984,3 +1114,60 @@ verified_queries:
         AND CANDIDATE_RANK <= 3
       GROUP BY CREW_BASE, REQUIRED_ROLE
       ORDER BY CREW_BASE, REQUIRED_ROLE
+
+  - name: vqr_otp_by_hub
+    question: What is the on-time performance by hub?
+    sql: |
+      SELECT 
+        ORIGIN AS hub,
+        COUNT(*) AS total_flights,
+        COUNT(CASE WHEN DEPARTURE_DELAY_MINUTES <= 15 THEN 1 END) AS on_time_flights,
+        ROUND(COUNT(CASE WHEN DEPARTURE_DELAY_MINUTES <= 15 THEN 1 END) * 100.0 / NULLIF(COUNT(*), 0), 1) AS otp_percentage
+      FROM PHANTOM_IROPS.STAGING.STG_FLIGHTS
+      WHERE ORIGIN IN ('LAX', 'JFK', 'ORD', 'DFW', 'ATL')
+        AND STATUS = 'ARRIVED'
+        AND FLIGHT_DATE = CURRENT_DATE()
+      GROUP BY ORIGIN
+      ORDER BY otp_percentage DESC
+
+  - name: vqr_otp_by_airport
+    question: What is the on-time performance by origin airport?
+    sql: |
+      SELECT 
+        ORIGIN,
+        COUNT(*) AS total_flights,
+        COUNT(CASE WHEN DEPARTURE_DELAY_MINUTES <= 15 THEN 1 END) AS on_time_flights,
+        ROUND(COUNT(CASE WHEN DEPARTURE_DELAY_MINUTES <= 15 THEN 1 END) * 100.0 / NULLIF(COUNT(*), 0), 1) AS otp_percentage
+      FROM PHANTOM_IROPS.STAGING.STG_FLIGHTS
+      WHERE STATUS = 'ARRIVED'
+        AND FLIGHT_DATE = CURRENT_DATE()
+      GROUP BY ORIGIN
+      ORDER BY otp_percentage DESC
+
+  - name: vqr_overall_otp_today
+    question: What is the overall on-time performance today?
+    sql: |
+      SELECT 
+        COUNT(*) AS total_arrived_flights,
+        COUNT(CASE WHEN DEPARTURE_DELAY_MINUTES <= 15 THEN 1 END) AS on_time_flights,
+        ROUND(COUNT(CASE WHEN DEPARTURE_DELAY_MINUTES <= 15 THEN 1 END) * 100.0 / NULLIF(COUNT(*), 0), 1) AS otp_percentage
+      FROM PHANTOM_IROPS.STAGING.STG_FLIGHTS
+      WHERE STATUS = 'ARRIVED'
+        AND FLIGHT_DATE = CURRENT_DATE()
+
+  - name: vqr_hub_flight_summary
+    question: Show me the flight summary for hub airports
+    sql: |
+      SELECT 
+        ORIGIN AS hub,
+        COUNT(*) AS total_flights,
+        SUM(CASE WHEN STATUS = 'ARRIVED' THEN 1 ELSE 0 END) AS arrived,
+        SUM(CASE WHEN STATUS = 'IN_FLIGHT' THEN 1 ELSE 0 END) AS in_flight,
+        SUM(CASE WHEN STATUS = 'DELAYED' THEN 1 ELSE 0 END) AS delayed,
+        SUM(CASE WHEN STATUS = 'CANCELLED' THEN 1 ELSE 0 END) AS cancelled,
+        ROUND(AVG(DEPARTURE_DELAY_MINUTES), 1) AS avg_delay_minutes
+      FROM PHANTOM_IROPS.STAGING.STG_FLIGHTS
+      WHERE ORIGIN IN ('LAX', 'JFK', 'ORD', 'DFW', 'ATL')
+        AND FLIGHT_DATE = CURRENT_DATE()
+      GROUP BY ORIGIN
+      ORDER BY total_flights DESC

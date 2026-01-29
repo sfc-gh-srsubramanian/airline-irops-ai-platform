@@ -531,7 +531,7 @@ SELECT
     CASE 
         WHEN UNIFORM(0, 100, RANDOM()) < 3 THEN 'CANCELLED'
         WHEN flight_date > CURRENT_DATE() THEN 'SCHEDULED'
-        WHEN flight_date = CURRENT_DATE() THEN 'IN_PROGRESS'
+        WHEN flight_date = CURRENT_DATE() THEN 'IN_FLIGHT'
         ELSE 'ARRIVED'
     END AS status,
     'A' || FLOOR(UNIFORM(1, 50, RANDOM()))::VARCHAR AS departure_gate,
@@ -595,6 +595,57 @@ SET
         ELSE 'ARRIVED'
     END
 WHERE flight_date >= DATEADD('day', -90, CURRENT_DATE());
+
+-- ============================================================================
+-- 7b. TIME-BASED STATUS UPDATE FOR TODAY'S FLIGHTS
+-- ============================================================================
+-- Updates flight statuses based on current time to simulate real-time operations:
+-- - Flights with scheduled departure > 30 min from now: SCHEDULED
+-- - Flights departing within 30 min: ON_TIME or DELAYED (based on delay minutes)
+-- - Flights that should have departed but not yet arrived: IN_FLIGHT
+-- - Flights past scheduled arrival time: ARRIVED
+-- This makes the dashboard realistic for demo purposes
+
+UPDATE FLIGHTS
+SET 
+    actual_departure_utc = CASE
+        WHEN status = 'CANCELLED' THEN NULL
+        WHEN scheduled_departure_utc < DATEADD('minute', -30, CURRENT_TIMESTAMP()) THEN
+            DATEADD('minute', departure_delay_minutes, scheduled_departure_utc)
+        ELSE actual_departure_utc
+    END,
+    actual_arrival_utc = CASE
+        WHEN status = 'CANCELLED' THEN NULL
+        WHEN DATEADD('minute', block_time_scheduled_min + departure_delay_minutes, scheduled_departure_utc) < CURRENT_TIMESTAMP() THEN
+            DATEADD('minute', block_time_scheduled_min + departure_delay_minutes + FLOOR(UNIFORM(-5, 10, RANDOM())), scheduled_departure_utc)
+        ELSE NULL
+    END,
+    block_time_actual_min = CASE
+        WHEN status = 'CANCELLED' THEN NULL
+        WHEN DATEADD('minute', block_time_scheduled_min + departure_delay_minutes, scheduled_departure_utc) < CURRENT_TIMESTAMP() THEN
+            block_time_scheduled_min + FLOOR(UNIFORM(-5, 10, RANDOM()))
+        ELSE NULL
+    END,
+    status = CASE
+        WHEN status = 'CANCELLED' THEN 'CANCELLED'
+        -- Future: more than 30 min until departure
+        WHEN scheduled_departure_utc > DATEADD('minute', 30, CURRENT_TIMESTAMP()) THEN 'SCHEDULED'
+        -- Departed and arrived: past scheduled arrival time (with delays)
+        WHEN DATEADD('minute', block_time_scheduled_min + departure_delay_minutes, scheduled_departure_utc) < CURRENT_TIMESTAMP() THEN 'ARRIVED'
+        -- In flight: departed but not yet arrived
+        WHEN scheduled_departure_utc < DATEADD('minute', -30, CURRENT_TIMESTAMP()) THEN 'IN_FLIGHT'
+        -- Departing soon: within 30 min of departure, check if delayed
+        WHEN departure_delay_minutes >= 15 THEN 'DELAYED'
+        ELSE 'ON_TIME'
+    END,
+    arrival_delay_minutes = CASE
+        WHEN status = 'CANCELLED' THEN NULL
+        WHEN DATEADD('minute', block_time_scheduled_min + departure_delay_minutes, scheduled_departure_utc) < CURRENT_TIMESTAMP() THEN
+            departure_delay_minutes + FLOOR(UNIFORM(-5, 10, RANDOM()))
+        ELSE NULL
+    END
+WHERE flight_date = CURRENT_DATE()
+AND status != 'CANCELLED';
 
 -- ============================================================================
 -- 8. DISRUPTIONS (50,000+ events)
