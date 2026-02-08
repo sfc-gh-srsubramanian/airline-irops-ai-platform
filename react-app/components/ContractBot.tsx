@@ -1,9 +1,28 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { CheckCircle, XCircle, AlertTriangle, MessageSquare, Book, Send, Loader2, Bot, User } from "lucide-react";
+import { CheckCircle, XCircle, AlertTriangle, MessageSquare, Book, Send, Loader2, Bot, User, Shield, DollarSign, Clock, Ban } from "lucide-react";
 import InfoTooltip from "./InfoTooltip";
 import { PAGE_HELP } from "@/lib/pageHelp";
+
+interface ViolationSave {
+  id: string;
+  crewId: string;
+  crewName: string;
+  flightId: string;
+  violation: string;
+  rule: string;
+  fineSaved: number;
+  timestamp: Date;
+}
+
+const DEMO_SAVES: ViolationSave[] = [
+  { id: "1", crewId: "CR004567", crewName: "Capt. Karen Wilson", flightId: "PH2847", violation: "Would exceed 9-hour FDP limit", rule: "FAA Part 117.13", fineSaved: 50000, timestamp: new Date(Date.now() - 1000 * 60 * 5) },
+  { id: "2", crewId: "CR001234", crewName: "Capt. John Smith", flightId: "PH1923", violation: "Only 8.5 hrs rest (min 10 required)", rule: "FAA Part 117.25", fineSaved: 50000, timestamp: new Date(Date.now() - 1000 * 60 * 23) },
+  { id: "3", crewId: "CR002345", crewName: "Capt. Mary Johnson", flightId: "PH3456", violation: "6 consecutive days exceeded", rule: "PWA Section 5.1", fineSaved: 5000, timestamp: new Date(Date.now() - 1000 * 60 * 47) },
+  { id: "4", crewId: "CR003456", crewName: "FO Robert Davis", flightId: "PH4521", violation: "Monthly 100-hour limit exceeded", rule: "FAA Part 117.23", fineSaved: 50000, timestamp: new Date(Date.now() - 1000 * 60 * 82) },
+  { id: "5", crewId: "CR005678", crewName: "Capt. Lisa Chen", flightId: "PH5678", violation: "Not type-qualified for A350", rule: "PWA Section 7.1", fineSaved: 25000, timestamp: new Date(Date.now() - 1000 * 60 * 95) },
+];
 
 interface ValidationResult {
   check: string;
@@ -51,7 +70,7 @@ const sampleQuestions = [
 ];
 
 export default function ContractBot() {
-  const [activeTab, setActiveTab] = useState<"validate" | "chat" | "reference">("validate");
+  const [activeTab, setActiveTab] = useState<"validate" | "chat" | "reference" | "saves">("validate");
   const [selectedCrew, setSelectedCrew] = useState(crewMembers[0]);
   const [selectedFlight, setSelectedFlight] = useState(flights[0]);
   const [validationResults, setValidationResults] = useState<ValidationResult[] | null>(null);
@@ -59,6 +78,7 @@ export default function ContractBot() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [chatInput, setChatInput] = useState("");
   const [chatLoading, setChatLoading] = useState(false);
+  const [showNewSave, setShowNewSave] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -127,6 +147,13 @@ export default function ContractBot() {
   const allPassed = validationResults?.every((r) => r.status === "pass");
   const hasWarnings = validationResults?.some((r) => r.status === "warning");
   const hasFails = validationResults?.some((r) => r.status === "fail");
+  
+  const totalSaved = DEMO_SAVES.reduce((sum, s) => sum + s.fineSaved, 0);
+
+  const triggerNewSaveDemo = () => {
+    setShowNewSave(true);
+    setTimeout(() => setShowNewSave(false), 5000);
+  };
 
   return (
     <div className="space-y-6">
@@ -149,15 +176,15 @@ export default function ContractBot() {
             <AlertTriangle className="h-4 w-4 text-amber-500" />
           </div>
           <p className="text-3xl font-bold text-phantom-dark">15</p>
-          <p className="text-sm text-amber-600">Saved $180K in grievances</p>
+          <p className="text-sm text-amber-600">$180K in grievances saved</p>
         </div>
-        <div className="bg-white rounded-xl shadow-sm border p-5">
+        <div className="bg-gradient-to-r from-green-500 to-emerald-600 rounded-xl shadow-sm p-5 text-white">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-sm text-slate-500">Queries Answered</span>
-            <MessageSquare className="h-4 w-4 text-purple-500" />
+            <span className="text-sm text-green-100">FAA Fines Avoided</span>
+            <Shield className="h-4 w-4 text-green-200" />
           </div>
-          <p className="text-3xl font-bold text-phantom-dark">234</p>
-          <p className="text-sm text-purple-600">By natural language</p>
+          <p className="text-3xl font-bold">${(totalSaved / 1000).toFixed(0)}K</p>
+          <p className="text-sm text-green-200">Part 117 violations blocked</p>
         </div>
       </div>
 
@@ -165,6 +192,7 @@ export default function ContractBot() {
         <div className="flex border-b px-5 py-3">
           {[
             { id: "validate", label: "Validate Assignment", icon: CheckCircle },
+            { id: "saves", label: "Live Saves", icon: Shield },
             { id: "chat", label: "Ask Contract Bot", icon: MessageSquare },
             { id: "reference", label: "Rule Reference", icon: Book },
           ].map((tab) => {
@@ -303,6 +331,118 @@ export default function ContractBot() {
                   </div>
                 </div>
               )}
+            </div>
+          )}
+
+          {activeTab === "saves" && (
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="text-lg font-semibold text-slate-800">Violations Caught in Real-Time</h3>
+                  <p className="text-sm text-slate-500">Contract Bot automatically blocks illegal assignments before they happen</p>
+                </div>
+                <button
+                  onClick={triggerNewSaveDemo}
+                  className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition flex items-center gap-2"
+                >
+                  <Ban className="h-4 w-4" />
+                  Simulate Violation Catch
+                </button>
+              </div>
+
+              {showNewSave && (
+                <div className="bg-red-50 border-2 border-red-300 rounded-xl p-4 animate-pulse">
+                  <div className="flex items-center gap-3">
+                    <div className="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center">
+                      <Ban className="h-6 w-6 text-red-600" />
+                    </div>
+                    <div className="flex-1">
+                      <p className="font-bold text-red-700 text-lg">VIOLATION BLOCKED</p>
+                      <p className="text-red-600">Capt. Michael Torres → PH7892 (LAX→JFK)</p>
+                      <p className="text-sm text-red-500">Would exceed 14-hour Flight Duty Period</p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-2xl font-bold text-red-700">$50,000</p>
+                      <p className="text-xs text-red-500">FAA Fine Avoided</p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              <div className="bg-gradient-to-r from-green-600 to-emerald-600 rounded-xl p-6 text-white">
+                <div className="grid grid-cols-4 gap-4 text-center">
+                  <div>
+                    <p className="text-4xl font-bold">{DEMO_SAVES.length}</p>
+                    <p className="text-sm text-green-200">Violations Blocked Today</p>
+                  </div>
+                  <div>
+                    <p className="text-4xl font-bold">${(totalSaved / 1000).toFixed(0)}K</p>
+                    <p className="text-sm text-green-200">Fines Avoided</p>
+                  </div>
+                  <div>
+                    <p className="text-4xl font-bold">0</p>
+                    <p className="text-sm text-green-200">FAA Violations This Month</p>
+                  </div>
+                  <div>
+                    <p className="text-4xl font-bold">100%</p>
+                    <p className="text-sm text-green-200">Compliance Rate</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="space-y-3">
+                {DEMO_SAVES.map((save, idx) => {
+                  const minutesAgo = Math.round((Date.now() - save.timestamp.getTime()) / 1000 / 60);
+                  return (
+                    <div
+                      key={save.id}
+                      className={`bg-white border rounded-xl p-4 flex items-center gap-4 ${
+                        idx === 0 ? "border-red-200 bg-red-50/30" : "border-slate-200"
+                      }`}
+                    >
+                      <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
+                        save.rule.startsWith("FAA") ? "bg-red-100" : "bg-amber-100"
+                      }`}>
+                        <Shield className={`h-5 w-5 ${
+                          save.rule.startsWith("FAA") ? "text-red-600" : "text-amber-600"
+                        }`} />
+                      </div>
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2">
+                          <p className="font-semibold text-slate-800">{save.crewName}</p>
+                          <span className="text-xs text-slate-400">→</span>
+                          <p className="text-sm text-slate-600">{save.flightId}</p>
+                        </div>
+                        <p className="text-sm text-red-600 font-medium">{save.violation}</p>
+                        <p className="text-xs text-slate-500">{save.rule}</p>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-lg font-bold text-green-600">${(save.fineSaved / 1000).toFixed(0)}K</p>
+                        <p className="text-xs text-slate-400">{minutesAgo} min ago</p>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
+                  <h4 className="font-semibold text-blue-800 flex items-center gap-2">
+                    <AlertTriangle className="h-4 w-4" />
+                    FAA Part 117 Violations
+                  </h4>
+                  <p className="text-sm text-blue-600 mt-1">Up to <span className="font-bold">$50,000</span> per violation</p>
+                  <p className="text-xs text-blue-500 mt-2">Includes FDP limits, rest requirements, monthly/annual hours</p>
+                </div>
+                <div className="bg-purple-50 border border-purple-200 rounded-xl p-4">
+                  <h4 className="font-semibold text-purple-800 flex items-center gap-2">
+                    <MessageSquare className="h-4 w-4" />
+                    PWA Grievances
+                  </h4>
+                  <p className="text-sm text-purple-600 mt-1">Up to <span className="font-bold">$5,000+</span> per grievance</p>
+                  <p className="text-xs text-purple-500 mt-2">Includes consecutive days, reserve notice, involuntary extensions</p>
+                </div>
+              </div>
             </div>
           )}
 

@@ -1187,8 +1187,7 @@ SELECT
     0 AS total_amount_usd,
     CASE 
         WHEN dea.flight_date < CURRENT_DATE() THEN 'COMPLETED'
-        WHEN dea.status = 'CANCELLED' THEN 'CANCELLED'
-        ELSE 'CONFIRMED'
+        ELSE 'CONFIRMED'  -- Keep CONFIRMED for rebooking (even if flight cancelled)
     END AS booking_status,
     FALSE AS is_connection,
     NULL AS connection_booking_id,
@@ -1278,8 +1277,7 @@ SELECT
     0 AS total_amount_usd,
     CASE 
         WHEN dpa.flight_date < CURRENT_DATE() THEN 'COMPLETED'
-        WHEN dpa.status = 'CANCELLED' THEN 'CANCELLED'
-        ELSE 'CONFIRMED'
+        ELSE 'CONFIRMED'  -- Keep CONFIRMED for rebooking (even if flight cancelled)
     END AS booking_status,
     FALSE AS is_connection,
     NULL AS connection_booking_id,
@@ -1296,6 +1294,111 @@ FROM daily_plat_assignments dpa;
 UPDATE BOOKINGS 
 SET total_amount_usd = fare_amount_usd + taxes_usd + fees_usd 
 WHERE booking_id LIKE 'PL%' AND total_amount_usd = 0;
+
+-- ============================================================================
+-- 16. REBOOKING_OPTIONS VIEW (For AI Assistant rebooking queries)
+-- ============================================================================
+-- This view provides alternative flight options for passengers on cancelled/delayed flights
+-- Used by AI Assistant to answer rebooking queries
+
+USE SCHEMA ANALYTICS;
+
+CREATE OR REPLACE VIEW REBOOKING_OPTIONS AS
+WITH impacted_bookings AS (
+    SELECT 
+        b.booking_id,
+        b.confirmation_code,
+        b.passenger_id,
+        p.first_name,
+        p.last_name,
+        p.loyalty_tier,
+        p.email,
+        p.phone,
+        b.flight_id AS original_flight_id,
+        f.flight_number AS original_flight_number,
+        f.flight_date AS original_flight_date,
+        f.origin,
+        f.destination,
+        f.scheduled_departure_utc AS original_departure,
+        f.scheduled_arrival_utc AS original_arrival,
+        f.status AS original_status,
+        f.departure_delay_minutes,
+        f.delay_reason,
+        b.fare_class,
+        b.cabin_class,
+        b.fare_amount_usd,
+        b.booking_status
+    FROM RAW.BOOKINGS b
+    JOIN RAW.FLIGHTS f ON b.flight_id = f.flight_id
+    JOIN RAW.PASSENGERS p ON b.passenger_id = p.passenger_id
+    WHERE f.status IN ('CANCELLED', 'DELAYED')
+      AND f.flight_date >= CURRENT_DATE
+      AND b.booking_status IN ('CONFIRMED', 'COMPLETED')
+),
+alternative_flights AS (
+    SELECT 
+        f.flight_id AS alt_flight_id,
+        f.flight_number AS alt_flight_number,
+        f.flight_date AS alt_flight_date,
+        f.origin AS alt_origin,
+        f.destination AS alt_destination,
+        f.scheduled_departure_utc AS alt_departure,
+        f.scheduled_arrival_utc AS alt_arrival,
+        f.status AS alt_status,
+        f.aircraft_type_code,
+        at.seat_capacity,
+        COALESCE(f.passengers_booked, 0) AS passengers_booked,
+        (at.seat_capacity - COALESCE(f.passengers_booked, 0)) AS available_seats
+    FROM RAW.FLIGHTS f
+    JOIN RAW.AIRCRAFT_TYPES at ON f.aircraft_type_code = at.aircraft_type_code
+    WHERE f.status = 'SCHEDULED'
+      AND f.flight_date >= CURRENT_DATE
+      AND (at.seat_capacity - COALESCE(f.passengers_booked, 0)) > 0
+)
+SELECT 
+    ib.booking_id,
+    ib.confirmation_code,
+    ib.passenger_id,
+    ib.first_name,
+    ib.last_name,
+    ib.loyalty_tier,
+    ib.email,
+    ib.phone,
+    ib.original_flight_id,
+    ib.original_flight_number,
+    ib.original_flight_date,
+    ib.origin,
+    ib.destination,
+    ib.original_departure,
+    ib.original_arrival,
+    ib.original_status,
+    ib.departure_delay_minutes,
+    ib.delay_reason,
+    ib.fare_class,
+    ib.cabin_class,
+    ib.fare_amount_usd,
+    af.alt_flight_id,
+    af.alt_flight_number,
+    af.alt_flight_date,
+    af.alt_departure,
+    af.alt_arrival,
+    af.available_seats,
+    DATEDIFF('minute', ib.original_departure, af.alt_departure) AS departure_time_diff_minutes,
+    ROW_NUMBER() OVER (
+        PARTITION BY ib.booking_id 
+        ORDER BY 
+            CASE WHEN ib.loyalty_tier IN ('DIAMOND', 'PLATINUM') THEN 0 ELSE 1 END,
+            ABS(DATEDIFF('minute', ib.original_departure, af.alt_departure))
+    ) AS option_rank
+FROM impacted_bookings ib
+JOIN alternative_flights af 
+    ON ib.origin = af.alt_origin 
+    AND ib.destination = af.alt_destination
+    AND af.alt_flight_date BETWEEN ib.original_flight_date AND DATEADD('day', 2, ib.original_flight_date)
+    AND af.alt_flight_id != ib.original_flight_id
+QUALIFY option_rank <= 3;
+
+USE SCHEMA RAW;
 
 -- ============================================================================
 -- DATA GENERATION COMPLETE

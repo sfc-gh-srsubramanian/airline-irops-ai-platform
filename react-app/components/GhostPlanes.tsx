@@ -252,7 +252,12 @@ export default function GhostPlanes() {
                   <th className="pb-3 font-medium">Flight</th>
                   <th className="pb-3 font-medium">Route</th>
                   <th className="pb-3 font-medium">Issue</th>
-                  <th className="pb-3 font-medium">Priority</th>
+                  <th className="pb-3 font-medium">
+                    <span className="flex items-center gap-1">
+                      Priority
+                      <InfoTooltip text="Recovery Priority Score (0-100). Higher = more urgent. 100 = aircraft location mismatch, 95 = missing crew, 90 = critical disruption, 85 = ground stop." />
+                    </span>
+                  </th>
                   <th className="pb-3 font-medium">PAX</th>
                   <th className="pb-3 font-medium">Action</th>
                 </tr>

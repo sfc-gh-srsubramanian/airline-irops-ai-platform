@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { Plane, Users, Ghost, AlertTriangle, Activity, MessageSquare, FileWarning, FileText, Menu, X } from "lucide-react";
+import { Plane, Users, Ghost, AlertTriangle, Activity, MessageSquare, FileWarning, FileText, Menu, X, Zap, UserCheck } from "lucide-react";
 import OperationsDashboard from "@/components/OperationsDashboard";
 import CrewRecovery from "@/components/CrewRecovery";
 import GhostPlanes from "@/components/GhostPlanes";
@@ -9,8 +9,12 @@ import AgentChat from "@/components/AgentChat";
 import DisruptionAnalysis from "@/components/DisruptionAnalysis";
 import ContractBot from "@/components/ContractBot";
 import Sidebar from "@/components/Sidebar";
+import SnowflakeIntelligence from "@/components/SnowflakeIntelligence";
+import PassengerRebooking from "@/components/PassengerRebooking";
+import CrowdStrikeScenario from "@/components/CrowdStrikeScenario";
+import { NotificationToast, useNotifications, NotificationDemo } from "@/components/NotificationSystem";
 
-type TabId = "dashboard" | "crew" | "ghost" | "disruptions" | "contract" | "assistant";
+type TabId = "dashboard" | "crew" | "ghost" | "disruptions" | "contract" | "assistant" | "intelligence" | "rebooking" | "scenario";
 
 interface SidebarFilters {
   hub: string;
@@ -21,9 +25,11 @@ interface SidebarFilters {
 const tabs = [
   { id: "dashboard" as TabId, label: "Operations", icon: Activity },
   { id: "crew" as TabId, label: "Crew Recovery", icon: Users },
+  { id: "rebooking" as TabId, label: "Rebooking", icon: UserCheck },
   { id: "ghost" as TabId, label: "Ghost Planes", icon: Ghost },
   { id: "disruptions" as TabId, label: "Disruptions", icon: FileWarning },
   { id: "contract" as TabId, label: "Contract Bot", icon: FileText },
+  { id: "scenario" as TabId, label: "Scenario", icon: Zap },
   { id: "assistant" as TabId, label: "AI Assistant", icon: MessageSquare },
 ];
 
@@ -36,6 +42,8 @@ export default function Home() {
     timeRange: "today",
   });
   const [quickStats, setQuickStats] = useState<{ flights: number; otp: number | null; crew: number } | undefined>();
+  const [hubStats, setHubStats] = useState<Array<{ ORIGIN: string; FLIGHT_COUNT: number; DELAYED_COUNT: number; AVG_DELAY: number }> | undefined>();
+  const { notifications, addNotification, dismissNotification } = useNotifications();
 
   const fetchQuickStats = useCallback(async (timeRange: string) => {
     try {
@@ -52,6 +60,9 @@ export default function Home() {
             otp,
             crew: 847,
           });
+        }
+        if (json.hubStats) {
+          setHubStats(json.hubStats);
         }
       }
     } catch {}
@@ -70,6 +81,7 @@ export default function Home() {
           filters={filters}
           onFiltersChange={setFilters}
           quickStats={quickStats}
+          hubStats={hubStats}
         />
       )}
 
@@ -151,8 +163,19 @@ export default function Home() {
           {activeTab === "disruptions" && <DisruptionAnalysis />}
           {activeTab === "contract" && <ContractBot />}
           {activeTab === "assistant" && <AgentChat />}
+          {activeTab === "intelligence" && <SnowflakeIntelligence />}
+          {activeTab === "rebooking" && <PassengerRebooking />}
+          {activeTab === "scenario" && <CrowdStrikeScenario />}
+          
+          {activeTab === "dashboard" && (
+            <div className="mt-6">
+              <NotificationDemo onNotify={addNotification} />
+            </div>
+          )}
         </main>
       </div>
+      
+      <NotificationToast notifications={notifications} onDismiss={dismissNotification} />
     </div>
   );
 }

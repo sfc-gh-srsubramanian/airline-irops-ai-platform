@@ -918,6 +918,168 @@ tables:
         expr: SQUAWKS_LAST_7_DAYS
         data_type: NUMBER
 
+  - name: REBOOKING_OPTIONS
+    description: |
+      Rebooking options for passengers on cancelled or delayed flights.
+      Use this table to find alternative flight options for impacted passengers.
+      Shows elite members, their original cancelled flights, and available rebooking alternatives.
+    base_table:
+      database: PHANTOM_IROPS
+      schema: ANALYTICS
+      table: REBOOKING_OPTIONS
+    primary_key:
+      columns:
+        - BOOKING_ID
+        - REBOOK_FLIGHT_ID
+
+    dimensions:
+      - name: booking_id
+        description: Unique identifier for the booking
+        expr: BOOKING_ID
+        data_type: TEXT
+
+      - name: confirmation_code
+        description: Passenger booking confirmation code
+        expr: CONFIRMATION_CODE
+        data_type: TEXT
+
+      - name: passenger_id
+        description: Unique identifier for the passenger
+        expr: PASSENGER_ID
+        data_type: TEXT
+
+      - name: first_name
+        description: Passenger first name
+        expr: FIRST_NAME
+        data_type: TEXT
+
+      - name: last_name
+        description: Passenger last name
+        expr: LAST_NAME
+        data_type: TEXT
+
+      - name: email
+        description: Passenger email address
+        expr: EMAIL
+        data_type: TEXT
+
+      - name: loyalty_tier
+        description: |
+          Passenger loyalty tier. DIAMOND is highest priority, followed by PLATINUM, GOLD, SILVER, BASIC.
+          Elite members are DIAMOND and PLATINUM tiers.
+        expr: LOYALTY_TIER
+        data_type: TEXT
+        sample_values:
+          - "DIAMOND"
+          - "PLATINUM"
+          - "GOLD"
+          - "SILVER"
+          - "BASIC"
+        synonyms:
+          - elite status
+          - membership level
+          - frequent flyer tier
+
+      - name: fare_class
+        description: Fare class of the booking
+        expr: FARE_CLASS
+        data_type: TEXT
+
+      - name: cabin_class
+        description: Cabin class (FIRST, BUSINESS, COMFORT_PLUS, MAIN)
+        expr: CABIN_CLASS
+        data_type: TEXT
+
+      - name: original_flight_id
+        description: ID of the cancelled/delayed flight
+        expr: ORIGINAL_FLIGHT_ID
+        data_type: TEXT
+
+      - name: original_flight_number
+        description: Flight number of the cancelled/delayed flight
+        expr: ORIGINAL_FLIGHT_NUMBER
+        data_type: TEXT
+
+      - name: origin
+        description: Origin airport IATA code
+        expr: ORIGIN
+        data_type: TEXT
+
+      - name: destination
+        description: Destination airport IATA code
+        expr: DESTINATION
+        data_type: TEXT
+
+      - name: original_status
+        description: Status of original flight (CANCELLED or DELAYED)
+        expr: ORIGINAL_STATUS
+        data_type: TEXT
+
+      - name: delay_reason
+        description: Reason for delay or cancellation
+        expr: DELAY_REASON
+        data_type: TEXT
+
+      - name: rebook_flight_id
+        description: ID of the alternative flight for rebooking
+        expr: REBOOK_FLIGHT_ID
+        data_type: TEXT
+
+      - name: rebook_flight_number
+        description: Flight number of the rebooking option
+        expr: REBOOK_FLIGHT_NUMBER
+        data_type: TEXT
+
+      - name: rebook_aircraft
+        description: Aircraft type for the rebooking flight
+        expr: REBOOK_AIRCRAFT
+        data_type: TEXT
+
+    time_dimensions:
+      - name: original_departure
+        description: Scheduled departure time of the original cancelled/delayed flight
+        expr: ORIGINAL_DEPARTURE
+        data_type: TIMESTAMP
+
+      - name: rebook_departure
+        description: Scheduled departure time of the rebooking option
+        expr: REBOOK_DEPARTURE
+        data_type: TIMESTAMP
+
+      - name: rebook_arrival
+        description: Scheduled arrival time of the rebooking option
+        expr: REBOOK_ARRIVAL
+        data_type: TIMESTAMP
+
+    facts:
+      - name: available_seats
+        description: Number of available seats on the rebooking flight
+        expr: AVAILABLE_SEATS
+        data_type: NUMBER
+
+      - name: minutes_after_original
+        description: How many minutes after original departure this option departs
+        expr: MINUTES_AFTER_ORIGINAL
+        data_type: NUMBER
+
+      - name: option_rank
+        description: Rank of this rebooking option (1=soonest departure, up to 3 options per booking)
+        expr: OPTION_RANK
+        data_type: NUMBER
+
+    filters:
+      - name: elite_members
+        description: Elite members only (DIAMOND and PLATINUM tiers)
+        expr: LOYALTY_TIER IN ('DIAMOND', 'PLATINUM')
+
+      - name: cancelled_flights
+        description: Passengers from cancelled flights only
+        expr: ORIGINAL_STATUS = 'CANCELLED'
+
+      - name: first_option
+        description: Show only the next immediate rebooking option (rank 1)
+        expr: OPTION_RANK = 1
+
 relationships:
   - name: flight_to_disruption
     left_table: FLIGHTS
@@ -1171,3 +1333,81 @@ verified_queries:
         AND FLIGHT_DATE = CURRENT_DATE()
       GROUP BY ORIGIN
       ORDER BY total_flights DESC
+
+  - name: vqr_rebooking_options_elite
+    question: What rebooking options are available for elite members on cancelled flights?
+    sql: |
+      SELECT 
+        LOYALTY_TIER,
+        FIRST_NAME || ' ' || LAST_NAME AS PASSENGER_NAME,
+        CONFIRMATION_CODE,
+        ORIGINAL_FLIGHT_NUMBER,
+        ORIGIN || ' → ' || DESTINATION AS ROUTE,
+        TO_CHAR(ORIGINAL_DEPARTURE, 'Mon DD HH24:MI') AS ORIG_TIME,
+        REBOOK_FLIGHT_NUMBER,
+        TO_CHAR(REBOOK_DEPARTURE, 'Mon DD HH24:MI') AS REBOOK_TIME,
+        AVAILABLE_SEATS,
+        OPTION_RANK
+      FROM PHANTOM_IROPS.ANALYTICS.REBOOKING_OPTIONS
+      WHERE LOYALTY_TIER IN ('DIAMOND', 'PLATINUM')
+      ORDER BY 
+        CASE LOYALTY_TIER WHEN 'DIAMOND' THEN 1 WHEN 'PLATINUM' THEN 2 END,
+        ORIGINAL_DEPARTURE,
+        OPTION_RANK
+
+  - name: vqr_rebooking_next_immediate
+    question: Give me rebooking options to put elite members impacted by cancellations in the next immediate flight
+    sql: |
+      SELECT 
+        LOYALTY_TIER,
+        FIRST_NAME || ' ' || LAST_NAME AS PASSENGER_NAME,
+        EMAIL,
+        CONFIRMATION_CODE,
+        ORIGINAL_FLIGHT_NUMBER AS CANCELLED_FLIGHT,
+        ORIGIN || ' → ' || DESTINATION AS ROUTE,
+        REBOOK_FLIGHT_NUMBER AS NEXT_AVAILABLE_FLIGHT,
+        TO_CHAR(REBOOK_DEPARTURE, 'Mon DD HH24:MI') AS DEPARTURE_TIME,
+        AVAILABLE_SEATS
+      FROM PHANTOM_IROPS.ANALYTICS.REBOOKING_OPTIONS
+      WHERE LOYALTY_TIER IN ('DIAMOND', 'PLATINUM')
+        AND OPTION_RANK = 1
+        AND ORIGINAL_STATUS = 'CANCELLED'
+      ORDER BY 
+        CASE LOYALTY_TIER WHEN 'DIAMOND' THEN 1 WHEN 'PLATINUM' THEN 2 END,
+        ORIGINAL_DEPARTURE
+
+  - name: vqr_passengers_needing_rebooking
+    question: How many passengers need rebooking from cancelled flights?
+    sql: |
+      SELECT 
+        LOYALTY_TIER,
+        COUNT(DISTINCT BOOKING_ID) AS PASSENGERS_NEEDING_REBOOKING,
+        COUNT(DISTINCT ORIGINAL_FLIGHT_ID) AS CANCELLED_FLIGHTS
+      FROM PHANTOM_IROPS.ANALYTICS.REBOOKING_OPTIONS
+      WHERE OPTION_RANK = 1
+      GROUP BY LOYALTY_TIER
+      ORDER BY 
+        CASE LOYALTY_TIER 
+          WHEN 'DIAMOND' THEN 1 
+          WHEN 'PLATINUM' THEN 2 
+          WHEN 'GOLD' THEN 3 
+          WHEN 'SILVER' THEN 4 
+          ELSE 5 
+        END
+
+  - name: vqr_rebooking_all_options
+    question: Show all rebooking options for a specific passenger
+    sql: |
+      SELECT 
+        FIRST_NAME || ' ' || LAST_NAME AS PASSENGER_NAME,
+        LOYALTY_TIER,
+        ORIGINAL_FLIGHT_NUMBER,
+        ORIGINAL_STATUS,
+        ORIGIN || ' → ' || DESTINATION AS ROUTE,
+        REBOOK_FLIGHT_NUMBER AS OPTION,
+        TO_CHAR(REBOOK_DEPARTURE, 'Mon DD HH24:MI') AS DEPARTURE,
+        TO_CHAR(REBOOK_ARRIVAL, 'Mon DD HH24:MI') AS ARRIVAL,
+        AVAILABLE_SEATS,
+        OPTION_RANK
+      FROM PHANTOM_IROPS.ANALYTICS.REBOOKING_OPTIONS
+      ORDER BY PASSENGER_ID, OPTION_RANK
