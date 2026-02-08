@@ -23,6 +23,8 @@ Phantom Airlines IROPS Platform addresses these challenges with:
 | 12-minute bottleneck | One-Click Recovery | ML ranking + batch notifications |
 | Ghost flights | Golden Record | Chained Dynamic Tables (1-min lag) |
 | Manual compliance | Contract Bot | Cortex AI with PWA/FAA rules |
+| Passenger rebooking chaos | Elite Prioritization | ML-ranked options by loyalty tier |
+| No communication | Notification System | Multi-channel crew & pax alerts |
 | Reactive decisions | Predictive intelligence | ML models + historical similarity |
 | Siloed data | Unified platform | Single Snowflake database |
 
@@ -115,7 +117,47 @@ The **IROPS_ASSISTANT** Intelligence Agent provides conversational access to ope
 - "Show me elite passengers affected by cancellations"
 - "Which Diamond members have the longest delays?"
 
-### 5. Historical Pattern Matching
+### 6. Passenger Rebooking with Elite Prioritization
+
+**Problem**: When flights cancel, rebooking is first-come-first-served. Elite members who generate 80% of revenue wait in the same queue as occasional travelers.
+
+**Solution**: ML-ranked rebooking options prioritized by loyalty tier
+
+**Loyalty Tier Priority**:
+1. **DIAMOND** - Top priority (lifetime elite, 100K+ miles/year)
+2. **PLATINUM** - High priority (75K+ miles/year)
+3. **GOLD** - Medium priority (50K+ miles/year)
+4. **SILVER** - Standard priority (25K+ miles/year)
+5. **BLUE** - Base priority
+
+**Features**:
+- Real-time count of passengers by tier
+- 3 rebooking options per passenger, ML-ranked
+- Persistent state (survives page refresh)
+- Reset demo button for presentations
+
+### 7. Multi-Channel Notification System
+
+**Problem**: During IROPS, crew found out about reassignments via Twitter. Passengers got no proactive updates.
+
+**Solution**: Integrated notification system for crew and passengers
+
+**Channels**:
+- SMS notifications
+- Email updates
+- Push notifications (mobile app)
+- In-app alerts
+
+**Use Cases**:
+- Crew duty reassignments
+- Rest requirement alerts
+- Passenger rebooking confirmations
+- Gate change notifications
+- Delay updates
+
+---
+
+### 8. Historical Pattern Matching
 
 **Problem**: During a crisis, operators rely on tribal knowledge. "What did we do last time this happened?"
 
@@ -244,7 +286,7 @@ RAW → STAGING (5 DTs) → INTERMEDIATE (2 DTs) → ANALYTICS (3 DTs)
 
 ### Phase 2 (Q2 2026)
 - Real-time ADS-B aircraft tracking integration
-- Passenger rebooking optimization
+- ~~Passenger rebooking optimization~~ ✅ COMPLETED
 - Proactive disruption prediction (6-hour horizon)
 
 ### Phase 3 (Q3 2026)

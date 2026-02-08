@@ -159,7 +159,29 @@ LIMIT 8;
 "
 
 echo -e "${BLUE}────────────────────────────────────────────────────────────${NC}"
-echo -e "${BLUE}8. AI Function Test${NC}"
+echo -e "${BLUE}8. Rebooking Options${NC}"
+echo -e "${BLUE}────────────────────────────────────────────────────────────${NC}"
+
+run_query "Checking rebooking options by loyalty tier" "
+SELECT 
+    LOYALTY_TIER,
+    COUNT(DISTINCT BOOKING_ID) AS passengers,
+    COUNT(*) AS total_options
+FROM ANALYTICS.REBOOKING_OPTIONS
+WHERE OPTION_RANK <= 3
+GROUP BY LOYALTY_TIER
+ORDER BY 
+    CASE LOYALTY_TIER
+        WHEN 'DIAMOND' THEN 1
+        WHEN 'PLATINUM' THEN 2
+        WHEN 'GOLD' THEN 3
+        WHEN 'SILVER' THEN 4
+        WHEN 'BLUE' THEN 5
+    END;
+"
+
+echo -e "${BLUE}────────────────────────────────────────────────────────────${NC}"
+echo -e "${BLUE}9. AI Function Test${NC}"
 echo -e "${BLUE}────────────────────────────────────────────────────────────${NC}"
 
 run_query "Testing Contract Bot query" "
@@ -181,7 +203,8 @@ echo -e "  ✓ Golden Record generating unified view"
 echo -e "  ✓ Disruption tracking operational"
 echo -e "  ✓ Crew availability tracking active"
 echo -e "  ✓ AI functions responding"
+echo -e "  ✓ Rebooking options available"
 echo ""
 echo -e "To run sample queries: ${YELLOW}snow sql -c ${CONNECTION_NAME} -f scripts/09_sample_queries.sql${NC}"
-echo -e "To launch dashboard:   ${YELLOW}cd streamlit && streamlit run app.py${NC}"
+echo -e "To launch dashboard:   ${YELLOW}cd react-app && npm run dev${NC}"
 echo ""

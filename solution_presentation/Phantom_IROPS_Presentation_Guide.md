@@ -20,6 +20,18 @@ This demo showcases how **Snowflake's unified platform**—combining Dynamic Tab
 
 This guide provides a structured walkthrough for demonstrating the Phantom Airlines IROPS Platform to airline operations teams, IT leadership, and Snowflake stakeholders.
 
+### Demo Features Overview
+
+| Feature | Description | Key Demo Point |
+|---------|-------------|----------------|
+| **CrowdStrike Scenario** | Live simulation of crisis metrics | Real-time impact visualization |
+| **Ghost Planes** | AI-powered ghost flight detection | Semantic model grounding |
+| **Passenger Rebooking** | Elite member prioritization | Diamond/Platinum first |
+| **Crew Recovery** | ML-ranked crew candidates | Batch notifications |
+| **Contract Bot** | FAA/Union compliance validation | Real-time contract queries |
+| **Notification System** | Crew & passenger alerts | Multi-channel delivery |
+| **Snowflake Intelligence** | Natural language queries | Text-to-SQL via semantic views |
+
 ---
 
 ## 🎬 Pre-Demo Setup (5 minutes before)
@@ -29,13 +41,14 @@ This guide provides a structured walkthrough for demonstrating the Phantom Airli
    ./deploy.sh
    ```
 
-2. **Start Streamlit dashboard** (deployed to Snowflake):
+2. **Start React dashboard** (local development):
+   ```bash
+   cd react-app && npm run dev
+   ```
+   Or deploy Streamlit to Snowflake:
    ```bash
    cd streamlit && snow streamlit deploy --replace
    ```
-   Or access directly in Snowsight: `PHANTOM_IROPS.ANALYTICS.IROPS_DASHBOARD`
-   
-   **Note**: In Streamlit in Snowflake (SiS), use the **sidebar** to navigate between pages.
 
 3. **Open Snowsight** in a separate browser tab for SQL queries
 
@@ -77,6 +90,22 @@ This guide provides a structured walkthrough for demonstrating the Phantom Airli
 
 ## 🖥️ Demo Sequence
 
+### Act 0: CrowdStrike Scenario Simulation (3 minutes)
+
+**Purpose:** Set the stage with live crisis metrics
+
+**Steps:**
+1. Open the **React dashboard** at `http://localhost:3000`
+2. Navigate to the **CrowdStrike Scenario** tab
+3. Show the **live metrics**:
+   - Affected flights count
+   - Stranded passengers
+   - Estimated cost impact
+   - Recovery progress over time
+4. Emphasize: *"This is what the ops center looked like in July 2024"*
+
+**Key Message:** *"During the real incident, airlines had no unified view. Our platform provides real-time visibility across all affected operations."*
+
 ### Act 1: The Golden Record (5 minutes)
 
 **Purpose:** Show how we eliminate ghost flights
@@ -104,7 +133,33 @@ WHERE is_ghost_flight = TRUE;
 
 ---
 
-### Act 2: One-Click Recovery (7 minutes)
+### Act 2: Passenger Rebooking (5 minutes)
+
+**Purpose:** Show elite member prioritization during IROPS
+
+**The Story:** *"When flights cancel, who gets rebooked first? Without a system, it's first-come-first-served—and your Diamond members who flew 100,000 miles last year wait behind someone who booked yesterday."*
+
+**Steps:**
+1. Navigate to **Passenger Rebooking** tab
+2. Show the **elite member breakdown**:
+   - Total passengers needing rebooking
+   - Elite count (Diamond + Platinum)
+   - Breakdown by tier: Diamond, Platinum, Gold, Silver, Blue
+3. Expand a Diamond passenger:
+   - Show their profile (lifetime miles, current booking)
+   - Show the **3 rebooking options** with rankings
+   - Point out option scores considering connection time, elite status
+4. Click **"Rebook"** on best option
+5. Show the count updates in real-time
+6. **Key Demo Moment:** Refresh the page
+   - "Notice the Successfully Rebooked count persists"
+   - "This uses localStorage for demo persistence"
+
+**Key Message:** *"Elite loyalty members get prioritized automatically. The system presents optimal rebooking options ranked by ML, and agents can process passengers in seconds, not minutes."*
+
+---
+
+### Act 3: One-Click Recovery (7 minutes)
 
 **Purpose:** Eliminate the 12-minute bottleneck
 
@@ -139,14 +194,14 @@ SELECT * FROM TABLE(ML_MODELS.GENERATE_BATCH_NOTIFICATION_LIST('FLT...', 'CAPTAI
 
 ---
 
-### Act 3: Contract Bot (5 minutes)
+### Act 4: Contract Bot (5 minutes)
 
 **Purpose:** Prevent compliance violations
 
 **The Story:** *"In the rush to recover operations, a dispatcher assigns a pilot who's already flown 98 hours this month. The legal limit is 100. That 3-hour flight just triggered an FAA violation—$50,000 fine. And the pilot's union files a grievance—another $5,000. This happens dozens of times during a major disruption because humans can't track complex rules under pressure."*
 
 **Steps:**
-1. Navigate to **Contract Bot** page using the sidebar
+1. Navigate to **Contract Bot** tab
 2. Use the **Validate Assignment** tab:
    - Select a crew member
    - Select a flight
@@ -191,7 +246,7 @@ SELECT ML_MODELS.CONTRACT_BOT_QUERY('What is the maximum FDP for a 6am report?')
 
 ---
 
-### Act 5: Disruption Cost Analysis (3 minutes)
+### Act 8: Disruption Cost Analysis (3 minutes)
 
 **Purpose:** Show financial impact visibility
 
@@ -213,7 +268,7 @@ SELECT ML_MODELS.CONTRACT_BOT_QUERY('What is the maximum FDP for a 6am report?')
 
 ---
 
-### Act 6: Architecture Deep-Dive (3 minutes)
+### Act 9: Architecture Deep-Dive (3 minutes)
 
 **Purpose:** Technical credibility
 
