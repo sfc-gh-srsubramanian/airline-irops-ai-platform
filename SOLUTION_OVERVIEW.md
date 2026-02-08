@@ -126,7 +126,7 @@ The repository contains:
 - Pre-built Dynamic Tables pipeline with Golden Record
 - Semantic model definitions for Cortex Analyst
 - Intelligence Agent configuration with Cortex Search
-- Streamlit dashboard for operations visualization
+- React/Next.js dashboard for operations visualization
 - ML notebooks for model training and deployment
 
 ### Quick Start
@@ -142,8 +142,8 @@ cd Airlines-IROPS
 # Validate deployment
 ./run.sh
 
-# Launch dashboard (deployed to Snowflake)
-snow streamlit deploy --connection <connection_name>
+# Launch React dashboard
+cd react-app && npm install && npm run dev
 ```
 
 ### Time to Deploy
@@ -165,7 +165,6 @@ snow streamlit deploy --connection <connection_name>
 - [Cortex Agents Documentation](https://docs.snowflake.com/en/user-guide/snowflake-cortex/cortex-agents)
 - [Cortex Search Documentation](https://docs.snowflake.com/en/user-guide/snowflake-cortex/cortex-search)
 - [Snowflake Intelligence Documentation](https://docs.snowflake.com/user-guide/snowflake-cortex/snowflake-intelligence)
-- [Streamlit in Snowflake Documentation](https://docs.snowflake.com/en/developer-guide/streamlit/about-streamlit)
 - [Dynamic Tables Documentation](https://docs.snowflake.com/en/user-guide/dynamic-tables-intro)
 - [Snowflake ML Documentation](https://docs.snowflake.com/en/developer-guide/snowflake-ml/overview)
 

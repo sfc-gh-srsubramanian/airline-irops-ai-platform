@@ -5,7 +5,8 @@
 <p align="center">
   <img src="https://img.shields.io/badge/Snowflake-29B5E8?style=for-the-badge&logo=snowflake&logoColor=white" alt="Snowflake"/>
   <img src="https://img.shields.io/badge/Cortex_AI-1E3A5F?style=for-the-badge&logo=snowflake&logoColor=white" alt="Cortex AI"/>
-  <img src="https://img.shields.io/badge/Streamlit-FF4B4B?style=for-the-badge&logo=streamlit&logoColor=white" alt="Streamlit"/>
+  <img src="https://img.shields.io/badge/React-61DAFB?style=for-the-badge&logo=react&logoColor=black" alt="React"/>
+  <img src="https://img.shields.io/badge/Next.js-000000?style=for-the-badge&logo=nextdotjs&logoColor=white" alt="Next.js"/>
 </p>
 
 ## 🎯 Overview
@@ -101,13 +102,13 @@ cd Airlines-IROPS
 
 ### Launch Dashboard
 
-The Streamlit app is deployed to Snowflake:
+The React dashboard runs locally:
 ```bash
-cd streamlit
-snow streamlit deploy --connection <connection_name> --replace
+cd react-app
+npm install
+npm run dev
 ```
-
-**Note**: When running in Streamlit in Snowflake (SiS), use the **sidebar navigation** to switch between pages. Programmatic navigation (`st.switch_page`) is not supported in SiS.
+Access at `http://localhost:3000`
 
 ### Cleanup
 
@@ -187,15 +188,26 @@ Airlines-IROPS/
 │   ├── 02_crew_ranking_model.ipynb       # Feature Store + LightGBM
 │   └── 03_cost_estimation_model.ipynb    # Feature Store + XGBoost
 │
-├── streamlit/
-│   ├── app.py                    # Main dashboard
-│   └── pages/
-│       ├── 1_Operations_Dashboard.py
-│       ├── 2_Crew_Recovery.py
-│       ├── 3_Ghost_Planes.py
-│       ├── 4_Disruption_Analysis.py
-│       ├── 5_Contract_Bot.py
-│       └── 6_Intelligence_Agent.py
+├── react-app/                   # React/Next.js Dashboard
+│   ├── app/                     # Next.js app router
+│   │   ├── api/                 # API routes
+│   │   │   ├── agent/           # Intelligence Agent API
+│   │   │   ├── ghost-planes/    # Ghost Planes API
+│   │   │   ├── intelligence/    # Snowflake Intelligence API
+│   │   │   └── rebooking/       # Passenger Rebooking API
+│   │   └── page.tsx             # Main page
+│   ├── components/              # React components
+│   │   ├── ContractBot.tsx      # Contract compliance validation
+│   │   ├── CrewRecovery.tsx     # One-Click crew recovery
+│   │   ├── CrowdStrikeScenario.tsx # Crisis simulation
+│   │   ├── DisruptionAnalysis.tsx  # Cost analysis
+│   │   ├── GhostPlanes.tsx      # Ghost flight detection
+│   │   ├── NotificationSystem.tsx  # Multi-channel alerts
+│   │   ├── PassengerRebooking.tsx  # Elite prioritization
+│   │   └── SnowflakeIntelligence.tsx # Text-to-SQL
+│   └── lib/                     # Utilities
+│
+├── streamlit/                   # Legacy Streamlit app (deprecated)
 │
 ├── solution_presentation/
 │   ├── Phantom_IROPS_Solution_Overview.md

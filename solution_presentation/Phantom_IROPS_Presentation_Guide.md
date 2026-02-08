@@ -45,10 +45,7 @@ This guide provides a structured walkthrough for demonstrating the Phantom Airli
    ```bash
    cd react-app && npm run dev
    ```
-   Or deploy Streamlit to Snowflake:
-   ```bash
-   cd streamlit && snow streamlit deploy --replace
-   ```
+   Access at `http://localhost:3000`
 
 3. **Open Snowsight** in a separate browser tab for SQL queries
 
@@ -113,9 +110,9 @@ This guide provides a structured walkthrough for demonstrating the Phantom Airli
 **The Story:** *"Imagine you're an operations manager at 3 AM during a storm. Your scheduling system says Captain Smith is flying Flight 1234 out of Atlanta. But Captain Smith checked into a hotel in Chicago six hours ago. The aircraft? It diverted to Miami. This is a 'ghost flight'—and during CrowdStrike, they were everywhere."*
 
 **Steps:**
-1. Open the **Streamlit app** in Snowsight or via URL
-2. Use the **sidebar** to navigate to different pages (Home, Operations Dashboard, Crew Recovery, etc.)
-3. Point to the "Ghost Flights" metric on the home page
+1. Open the **React dashboard** at `http://localhost:3000`
+2. Navigate to the **Ghost Planes** tab
+3. Point to the "Ghost Flights" count
 4. Click **Ghost Planes** in the sidebar
 5. Show a specific ghost flight:
    - "This flight PH1234 shows Captain Smith assigned, departing from ATL"
@@ -361,7 +358,7 @@ If using slides alongside the demo, here's the recommended deck structure:
 
 ### Dashboard not loading?
 ```bash
-cd streamlit && streamlit run app.py --server.port 8501
+cd react-app && npm run dev
 ```
 
 ### Data looks empty?
