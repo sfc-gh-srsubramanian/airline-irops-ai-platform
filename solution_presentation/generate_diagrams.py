@@ -89,13 +89,13 @@ def create_architecture_diagram():
             ha='center', va='center', fontsize=11, color=COLORS['gray'])
     
     # Layer 1: User Interface (Top)
-    draw_section_header(ax, 88, 'USER INTERFACE LAYER')
+    draw_section_header(ax, 88, 'REACT/NEXT.JS DASHBOARD')
     ui_components = [
-        ('Operations\nDashboard', 15), ('Crew\nRecovery', 30), ('Ghost\nPlanes', 45),
-        ('Disruption\nAnalysis', 60), ('Contract\nBot', 75), ('Intelligence\nAgent', 90)
+        ('CrowdStrike\nScenario', 10), ('Ghost\nPlanes', 23), ('Passenger\nRebooking', 36),
+        ('Crew\nRecovery', 49), ('Contract\nBot', 62), ('Notifications', 75), ('Snowflake\nIntelligence', 90)
     ]
     for label, x in ui_components:
-        draw_box(ax, x, 81, 12, 6, label, COLORS['primary_blue'], fontsize=8)
+        draw_box(ax, x, 81, 11, 6, label, COLORS['primary_blue'], fontsize=7)
     
     # Layer 2: Snowflake Cortex AI
     draw_section_header(ax, 72, 'SNOWFLAKE CORTEX AI LAYER')
