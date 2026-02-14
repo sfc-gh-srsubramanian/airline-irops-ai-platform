@@ -496,26 +496,39 @@ SELECT
     destination,
     scheduled_departure_utc,
     DATEADD('minute', block_time_min, scheduled_departure_utc) AS scheduled_arrival_utc,
+    -- Use deterministic cancelled check based on flight_id hash (3% cancelled)
+    MOD(ABS(HASH(flight_number || flight_date::VARCHAR || origin || destination)), 100) < 3 AS is_cancelled_flag,
     -- Actual times with realistic delays - MORE DELAYS FOR TODAY to showcase IROPS
     CASE 
-        -- Cancelled flights (3%)
-        WHEN UNIFORM(0, 100, RANDOM()) < 3 THEN NULL
+        -- Cancelled flights (3% - deterministic based on hash)
+        WHEN MOD(ABS(HASH(flight_number || flight_date::VARCHAR || origin || destination)), 100) < 3 THEN NULL
         -- Future flights beyond today have no actual times yet
         WHEN flight_date > CURRENT_DATE() THEN NULL
         -- TODAY and recent flights: Higher delay rate (40% delayed) to showcase IROPS
         WHEN flight_date >= DATEADD('day', -3, CURRENT_DATE()) THEN
-            CASE 
-                WHEN UNIFORM(0, 100, RANDOM()) < 60 THEN scheduled_departure_utc  -- 60% on-time
-                WHEN UNIFORM(0, 100, RANDOM()) < 50 THEN DATEADD('minute', FLOOR(UNIFORM(15, 45, RANDOM())), scheduled_departure_utc)  -- Minor delay
-                WHEN UNIFORM(0, 100, RANDOM()) < 70 THEN DATEADD('minute', FLOOR(UNIFORM(45, 120, RANDOM())), scheduled_departure_utc)  -- Moderate delay
-                ELSE DATEADD('minute', FLOOR(UNIFORM(120, 300, RANDOM())), scheduled_departure_utc)  -- Severe delay
+            CASE MOD(ABS(HASH(flight_number || flight_date::VARCHAR || daily_flight_num::VARCHAR)), 100)
+                WHEN 0 THEN scheduled_departure_utc
+                WHEN 1 THEN scheduled_departure_utc
+                WHEN 2 THEN scheduled_departure_utc
+                WHEN 3 THEN scheduled_departure_utc
+                WHEN 4 THEN scheduled_departure_utc
+                WHEN 5 THEN scheduled_departure_utc  -- 60% on-time (0-59)
+                ELSE 
+                    CASE 
+                        WHEN MOD(ABS(HASH(flight_number || flight_date::VARCHAR || daily_flight_num::VARCHAR)), 100) < 80 
+                            THEN DATEADD('minute', 15 + MOD(ABS(HASH(flight_number || origin)), 30), scheduled_departure_utc)  -- Minor delay 15-45 min
+                        WHEN MOD(ABS(HASH(flight_number || flight_date::VARCHAR || daily_flight_num::VARCHAR)), 100) < 95 
+                            THEN DATEADD('minute', 45 + MOD(ABS(HASH(flight_number || destination)), 75), scheduled_departure_utc)  -- Moderate delay 45-120 min
+                        ELSE DATEADD('minute', 120 + MOD(ABS(HASH(flight_number || origin || destination)), 180), scheduled_departure_utc)  -- Severe delay 120-300 min
+                    END
             END
         -- Historical flights: Normal delay pattern
         ELSE
             CASE 
-                WHEN UNIFORM(0, 100, RANDOM()) < 80 THEN scheduled_departure_utc  -- 80% on-time
-                WHEN UNIFORM(0, 100, RANDOM()) < 60 THEN DATEADD('minute', FLOOR(UNIFORM(5, 30, RANDOM())), scheduled_departure_utc)
-                ELSE DATEADD('minute', FLOOR(UNIFORM(30, 90, RANDOM())), scheduled_departure_utc)
+                WHEN MOD(ABS(HASH(flight_number || flight_date::VARCHAR)), 100) < 80 THEN scheduled_departure_utc  -- 80% on-time
+                WHEN MOD(ABS(HASH(flight_number || flight_date::VARCHAR)), 100) < 90 
+                    THEN DATEADD('minute', 5 + MOD(ABS(HASH(flight_number)), 25), scheduled_departure_utc)  -- Minor delay 5-30 min
+                ELSE DATEADD('minute', 30 + MOD(ABS(HASH(flight_number || origin)), 60), scheduled_departure_utc)  -- Moderate delay 30-90 min
             END
     END AS actual_departure_utc,
     NULL AS actual_arrival_utc,  -- Calculated in post-processing
@@ -527,11 +540,11 @@ SELECT
     NULL AS captain_id,
     NULL AS first_officer_id,
     NULL AS purser_id,
-    -- Status based on date and departure times
+    -- Status based on date and departure times (use same deterministic cancelled check)
     CASE 
-        WHEN UNIFORM(0, 100, RANDOM()) < 3 THEN 'CANCELLED'
+        WHEN MOD(ABS(HASH(flight_number || flight_date::VARCHAR || origin || destination)), 100) < 3 THEN 'CANCELLED'
         WHEN flight_date > CURRENT_DATE() THEN 'SCHEDULED'
-        WHEN flight_date = CURRENT_DATE() THEN 'IN_FLIGHT'
+        WHEN flight_date = CURRENT_DATE() THEN 'SCHEDULED'  -- Will be updated in post-processing based on time
         ELSE 'ARRIVED'
     END AS status,
     'A' || FLOOR(UNIFORM(1, 50, RANDOM()))::VARCHAR AS departure_gate,
