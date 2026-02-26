@@ -221,19 +221,36 @@ RETURNS TABLE (
 )
 LANGUAGE SQL
 AS
-$$
+$
+    WITH ranked_incidents AS (
+        SELECT 
+            h.incident_id,
+            h.incident_type,
+            h.severity,
+            h.affected_hub,
+            h.trigger_event,
+            h.recovery_strategy,
+            VECTOR_COSINE_SIMILARITY(
+                SNOWFLAKE.CORTEX.EMBED_TEXT_768('snowflake-arctic-embed-m-v1.5', query_description),
+                SNOWFLAKE.CORTEX.EMBED_TEXT_768('snowflake-arctic-embed-m-v1.5', h.description)
+            ) AS similarity_score,
+            ROW_NUMBER() OVER (ORDER BY VECTOR_COSINE_SIMILARITY(
+                SNOWFLAKE.CORTEX.EMBED_TEXT_768('snowflake-arctic-embed-m-v1.5', query_description),
+                SNOWFLAKE.CORTEX.EMBED_TEXT_768('snowflake-arctic-embed-m-v1.5', h.description)
+            ) DESC) AS rn
+        FROM RAW.HISTORICAL_INCIDENTS h
+    )
     SELECT 
-        h.incident_id,
-        h.incident_type,
-        h.severity,
-        h.affected_hub,
-        h.trigger_event,
-        h.recovery_strategy,
-        SNOWFLAKE.CORTEX.SIMILARITY(query_description, h.description) AS similarity_score
-    FROM RAW.HISTORICAL_INCIDENTS h
-    ORDER BY similarity_score DESC
-    LIMIT max_results
-$$;
+        incident_id,
+        incident_type,
+        severity,
+        affected_hub,
+        trigger_event,
+        recovery_strategy,
+        similarity_score
+    FROM ranked_incidents
+    WHERE rn <= max_results
+$;
 
 -- Create view for incident similarity analysis
 CREATE OR REPLACE VIEW INCIDENT_SIMILARITY_ANALYSIS AS
@@ -249,11 +266,17 @@ SELECT
     h.recovery_strategy AS proven_recovery_strategy,
     h.recovery_time_hours AS historical_recovery_time,
     h.total_cost_usd AS historical_cost,
-    SNOWFLAKE.CORTEX.SIMILARITY(d.description, h.description) AS similarity_score
+    VECTOR_COSINE_SIMILARITY(
+        SNOWFLAKE.CORTEX.EMBED_TEXT_768('snowflake-arctic-embed-m-v1.5', d.description),
+        SNOWFLAKE.CORTEX.EMBED_TEXT_768('snowflake-arctic-embed-m-v1.5', h.description)
+    ) AS similarity_score
 FROM STAGING.STG_DISRUPTIONS d
 CROSS JOIN RAW.HISTORICAL_INCIDENTS h
 WHERE d.is_active
-QUALIFY ROW_NUMBER() OVER (PARTITION BY d.disruption_id ORDER BY SNOWFLAKE.CORTEX.SIMILARITY(d.description, h.description) DESC) <= 3;
+QUALIFY ROW_NUMBER() OVER (PARTITION BY d.disruption_id ORDER BY VECTOR_COSINE_SIMILARITY(
+    SNOWFLAKE.CORTEX.EMBED_TEXT_768('snowflake-arctic-embed-m-v1.5', d.description),
+    SNOWFLAKE.CORTEX.EMBED_TEXT_768('snowflake-arctic-embed-m-v1.5', h.description)
+) DESC) <= 3;
 
 -- ============================================================================
 -- 5. CONTRACT BOT - PWA & FAA COMPLIANCE VALIDATION
@@ -465,8 +488,8 @@ RETURNS TABLE (
 )
 LANGUAGE SQL
 AS
-$$
-    WITH top_candidates AS (
+$
+    WITH ranked_candidates AS (
         SELECT 
             cr.candidate_rank,
             cr.crew_id,
@@ -477,13 +500,12 @@ $$
             cr.flight_number,
             cr.origin,
             cr.destination,
-            TO_CHAR(cr.scheduled_departure_utc, 'HH24:MI') AS departure_time
+            TO_CHAR(cr.scheduled_departure_utc, 'HH24:MI') AS departure_time,
+            ROW_NUMBER() OVER (ORDER BY cr.ml_fit_score DESC) AS rn
         FROM ML_MODELS.CREW_CANDIDATE_RANKINGS cr
         WHERE cr.flight_id = flight_id
           AND cr.crew_type = required_role
           AND cr.is_type_qualified
-        ORDER BY cr.ml_fit_score DESC
-        LIMIT max_candidates
     )
     SELECT 
         candidate_rank,
@@ -494,29 +516,30 @@ $$
         ml_fit_score,
         'URGENT: Open trip available. ' || flight_number || ' ' || origin || '-' || destination || 
         ' departing ' || departure_time || ' UTC. Reply YES to accept or call Crew Scheduling.' AS notification_message
-    FROM top_candidates
-$$;
+    FROM ranked_candidates
+    WHERE rn <= max_candidates
+$;
 
 -- ============================================================================
 -- 7. GRANT PERMISSIONS
 -- ============================================================================
 
-GRANT SELECT ON TABLE CONTRACT_RULES TO ROLE IDENTIFIER($PROJECT_ROLE);
-GRANT SELECT ON VIEW AUTO_CLASSIFIED_DISRUPTIONS TO ROLE IDENTIFIER($PROJECT_ROLE);
-GRANT SELECT ON VIEW INCIDENT_SIMILARITY_ANALYSIS TO ROLE IDENTIFIER($PROJECT_ROLE);
-GRANT SELECT ON VIEW CREW_ASSIGNMENT_VALIDATIONS TO ROLE IDENTIFIER($PROJECT_ROLE);
+GRANT SELECT ON TABLE CONTRACT_RULES TO ROLE PHANTOM_IROPS_ADMIN;
+GRANT SELECT ON VIEW AUTO_CLASSIFIED_DISRUPTIONS TO ROLE PHANTOM_IROPS_ADMIN;
+GRANT SELECT ON VIEW INCIDENT_SIMILARITY_ANALYSIS TO ROLE PHANTOM_IROPS_ADMIN;
+GRANT SELECT ON VIEW CREW_ASSIGNMENT_VALIDATIONS TO ROLE PHANTOM_IROPS_ADMIN;
 
-GRANT USAGE ON FUNCTION CLASSIFY_DISRUPTION_SEVERITY(TEXT) TO ROLE IDENTIFIER($PROJECT_ROLE);
-GRANT USAGE ON FUNCTION CLASSIFY_DISRUPTION_TYPE(TEXT) TO ROLE IDENTIFIER($PROJECT_ROLE);
-GRANT USAGE ON FUNCTION CLASSIFY_MAINTENANCE_PRIORITY(TEXT) TO ROLE IDENTIFIER($PROJECT_ROLE);
-GRANT USAGE ON FUNCTION CLASSIFY_ATA_CHAPTER(TEXT) TO ROLE IDENTIFIER($PROJECT_ROLE);
-GRANT USAGE ON FUNCTION GENERATE_DISRUPTION_SUMMARY(VARCHAR, VARCHAR, VARCHAR, INTEGER, INTEGER, TEXT) TO ROLE IDENTIFIER($PROJECT_ROLE);
-GRANT USAGE ON FUNCTION GENERATE_PASSENGER_NOTIFICATION(VARCHAR, VARCHAR, VARCHAR, INTEGER, TEXT, BOOLEAN) TO ROLE IDENTIFIER($PROJECT_ROLE);
-GRANT USAGE ON FUNCTION GENERATE_RECOVERY_RECOMMENDATION(TEXT, TEXT, TEXT) TO ROLE IDENTIFIER($PROJECT_ROLE);
-GRANT USAGE ON FUNCTION FIND_SIMILAR_INCIDENTS(TEXT, INTEGER) TO ROLE IDENTIFIER($PROJECT_ROLE);
-GRANT USAGE ON FUNCTION VALIDATE_CREW_ASSIGNMENT(VARCHAR, VARCHAR, VARCHAR) TO ROLE IDENTIFIER($PROJECT_ROLE);
-GRANT USAGE ON FUNCTION CONTRACT_BOT_QUERY(TEXT) TO ROLE IDENTIFIER($PROJECT_ROLE);
-GRANT USAGE ON FUNCTION GENERATE_BATCH_NOTIFICATION_LIST(VARCHAR, VARCHAR, INTEGER) TO ROLE IDENTIFIER($PROJECT_ROLE);
+GRANT USAGE ON FUNCTION CLASSIFY_DISRUPTION_SEVERITY(TEXT) TO ROLE PHANTOM_IROPS_ADMIN;
+GRANT USAGE ON FUNCTION CLASSIFY_DISRUPTION_TYPE(TEXT) TO ROLE PHANTOM_IROPS_ADMIN;
+GRANT USAGE ON FUNCTION CLASSIFY_MAINTENANCE_PRIORITY(TEXT) TO ROLE PHANTOM_IROPS_ADMIN;
+GRANT USAGE ON FUNCTION CLASSIFY_ATA_CHAPTER(TEXT) TO ROLE PHANTOM_IROPS_ADMIN;
+GRANT USAGE ON FUNCTION GENERATE_DISRUPTION_SUMMARY(VARCHAR, VARCHAR, VARCHAR, INTEGER, INTEGER, TEXT) TO ROLE PHANTOM_IROPS_ADMIN;
+GRANT USAGE ON FUNCTION GENERATE_PASSENGER_NOTIFICATION(VARCHAR, VARCHAR, VARCHAR, INTEGER, TEXT, BOOLEAN) TO ROLE PHANTOM_IROPS_ADMIN;
+GRANT USAGE ON FUNCTION GENERATE_RECOVERY_RECOMMENDATION(TEXT, TEXT, TEXT) TO ROLE PHANTOM_IROPS_ADMIN;
+GRANT USAGE ON FUNCTION FIND_SIMILAR_INCIDENTS(TEXT, INTEGER) TO ROLE PHANTOM_IROPS_ADMIN;
+GRANT USAGE ON FUNCTION VALIDATE_CREW_ASSIGNMENT(VARCHAR, VARCHAR, VARCHAR) TO ROLE PHANTOM_IROPS_ADMIN;
+GRANT USAGE ON FUNCTION CONTRACT_BOT_QUERY(TEXT) TO ROLE PHANTOM_IROPS_ADMIN;
+GRANT USAGE ON FUNCTION GENERATE_BATCH_NOTIFICATION_LIST(VARCHAR, VARCHAR, INTEGER) TO ROLE PHANTOM_IROPS_ADMIN;
 
 -- ============================================================================
 -- CORTEX AI FUNCTIONS COMPLETE

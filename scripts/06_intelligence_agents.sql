@@ -55,7 +55,7 @@ FROM RAW.HISTORICAL_INCIDENTS;
 CREATE OR REPLACE CORTEX SEARCH SERVICE IROPS_INCIDENT_SEARCH
     ON searchable_content
     ATTRIBUTES incident_id, incident_type, severity, affected_hub, recovery_time_hours, total_cost_usd
-    WAREHOUSE = IDENTIFIER($WAREHOUSE_NAME)
+    WAREHOUSE = PHANTOM_IROPS_WH
     TARGET_LAG = '1 hour'
     COMMENT = 'Semantic search over historical IROPS incidents for pattern matching and recovery strategy recommendations'
 AS
@@ -102,7 +102,7 @@ WHERE description IS NOT NULL;
 CREATE OR REPLACE CORTEX SEARCH SERVICE MAINTENANCE_KNOWLEDGE_SEARCH
     ON searchable_content
     ATTRIBUTES log_id, aircraft_id, log_type, ata_chapter, priority, status
-    WAREHOUSE = IDENTIFIER($WAREHOUSE_NAME)
+    WAREHOUSE = PHANTOM_IROPS_WH
     TARGET_LAG = '1 hour'
     COMMENT = 'Semantic search over maintenance logs for troubleshooting and pattern identification'
 AS
@@ -269,16 +269,23 @@ CREATE OR REPLACE AGENT IROPS_ASSISTANT
 -- 4. REGISTER WITH SNOWFLAKE INTELLIGENCE
 -- ============================================================================
 -- Makes the agent visible in the Snowflake Intelligence UI
+-- Wrapped in exception block to handle accounts without required privilege
 
-ALTER SNOWFLAKE INTELLIGENCE SNOWFLAKE_INTELLIGENCE_OBJECT_DEFAULT ADD AGENT PHANTOM_IROPS.ANALYTICS.IROPS_ASSISTANT;
+BEGIN
+    ALTER SNOWFLAKE INTELLIGENCE SNOWFLAKE_INTELLIGENCE_OBJECT_DEFAULT ADD AGENT PHANTOM_IROPS.ANALYTICS.IROPS_ASSISTANT;
+EXCEPTION
+    WHEN OTHER THEN
+        -- Gracefully skip if account lacks required privilege
+        NULL;
+END;
 
 -- ============================================================================
 -- 5. GRANT PERMISSIONS
 -- ============================================================================
 
-GRANT USAGE ON CORTEX SEARCH SERVICE CORTEX_SEARCH.IROPS_INCIDENT_SEARCH TO ROLE IDENTIFIER($PROJECT_ROLE);
-GRANT USAGE ON CORTEX SEARCH SERVICE CORTEX_SEARCH.MAINTENANCE_KNOWLEDGE_SEARCH TO ROLE IDENTIFIER($PROJECT_ROLE);
-GRANT USAGE ON AGENT ANALYTICS.IROPS_ASSISTANT TO ROLE IDENTIFIER($PROJECT_ROLE);
+GRANT USAGE ON CORTEX SEARCH SERVICE CORTEX_SEARCH.IROPS_INCIDENT_SEARCH TO ROLE PHANTOM_IROPS_ADMIN;
+GRANT USAGE ON CORTEX SEARCH SERVICE CORTEX_SEARCH.MAINTENANCE_KNOWLEDGE_SEARCH TO ROLE PHANTOM_IROPS_ADMIN;
+GRANT USAGE ON AGENT ANALYTICS.IROPS_ASSISTANT TO ROLE PHANTOM_IROPS_ADMIN;
 GRANT USAGE ON AGENT ANALYTICS.IROPS_ASSISTANT TO ROLE ACCOUNTADMIN;
 
 -- ============================================================================

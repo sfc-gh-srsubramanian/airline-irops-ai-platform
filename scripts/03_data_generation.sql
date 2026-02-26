@@ -314,7 +314,7 @@ WITH pilots AS (
     FROM CREW_MEMBERS 
     WHERE crew_type IN ('CAPTAIN', 'FIRST_OFFICER')
 ),
-aircraft_types AS (
+ac_types AS (
     SELECT aircraft_type_code FROM AIRCRAFT_TYPES
 ),
 primary_ratings AS (
@@ -327,7 +327,7 @@ primary_ratings AS (
         a.aircraft_type_code,
         ROW_NUMBER() OVER (PARTITION BY p.crew_id ORDER BY RANDOM()) AS rating_rank
     FROM pilots p
-    CROSS JOIN aircraft_types a
+    CROSS JOIN ac_types a
 )
 SELECT 
     'QUAL' || crew_id || '-' || aircraft_type_code AS qualification_id,
@@ -459,7 +459,7 @@ flight_schedule AS (
         r.route_type,
         s.flight_num AS daily_flight_num,
         -- Flight number format: PH + route hash
-        'PH' || ABS(HASH(r.origin || r.destination)) % 9000 + 1000 AS flight_number,
+        'PH' || (ABS(HASH(r.origin || r.destination)) % 9000 + 1000) AS flight_number,
         -- Departure times spread throughout day (4am to 11pm local)
         DATEADD('minute', 
             240 + (s.flight_num - 1) * FLOOR(1140 / GREATEST(r.daily_freq, 1)) + FLOOR(UNIFORM(-30, 30, RANDOM())),
@@ -496,8 +496,6 @@ SELECT
     destination,
     scheduled_departure_utc,
     DATEADD('minute', block_time_min, scheduled_departure_utc) AS scheduled_arrival_utc,
-    -- Use deterministic cancelled check based on flight_id hash (3% cancelled)
-    MOD(ABS(HASH(flight_number || flight_date::VARCHAR || origin || destination)), 100) < 3 AS is_cancelled_flag,
     -- Actual times with realistic delays - MORE DELAYS FOR TODAY to showcase IROPS
     CASE 
         -- Cancelled flights (3% - deterministic based on hash)
@@ -913,8 +911,8 @@ FROM airport_weather;
 
 DELETE FROM HISTORICAL_INCIDENTS;
 
-INSERT INTO HISTORICAL_INCIDENTS VALUES
-    ('INC001', '2024-07-19', 'SYSTEM_OUTAGE', 'CROWDSTRIKE', 'CRITICAL', 'ATL',
+INSERT INTO HISTORICAL_INCIDENTS
+SELECT 'INC001', '2024-07-19', 'SYSTEM_OUTAGE', 'CROWDSTRIKE', 'CRITICAL', 'ATL',
      'CrowdStrike Falcon sensor update caused global Windows system crashes',
      'Massive IT outage affecting crew scheduling system ARCOS. All Windows-based systems crashed simultaneously at 04:09 UTC. Flight operations systems recovered within hours but crew tracking remained offline for 72+ hours. Unable to locate crew or verify duty times. Manual phone calls required to reach each pilot individually.',
      4000, 12000, 1500000, 120,
@@ -922,9 +920,9 @@ INSERT INTO HISTORICAL_INCIDENTS VALUES
      PARSE_JSON('["Sequential pilot calling", "Manual duty time tracking", "Hub-based crew staging", "Duty time extensions", "Passenger rebooking on partner airlines"]'),
      'Need automated backup crew tracking. Phone tree approach creates 12-minute bottleneck per pilot. Consider batch notification system. Maintain offline crew roster with contact info.',
      85000000, 'Pilots unable to be reached. Sequential calling took 5+ days to staff all flights. Union grievances filed for illegal assignments made under pressure.',
-     PARSE_JSON('["INC002", "INC005"]'), NULL, CURRENT_TIMESTAMP()),
-     
-    ('INC002', '2022-12-22', 'WEATHER', 'WINTER_STORM', 'CRITICAL', 'ATL',
+     PARSE_JSON('["INC002", "INC005"]'), NULL::VECTOR(FLOAT, 768), CURRENT_TIMESTAMP()
+UNION ALL
+SELECT 'INC002', '2022-12-22', 'WEATHER', 'WINTER_STORM', 'CRITICAL', 'ATL',
      'Winter Storm Elliott brings ice and freezing rain to Atlanta hub',
      'Unprecedented ice storm shut down ATL operations for 48 hours. Deicing fluid shortage compounded delays. 2,500 flights cancelled over 4 days. Crew out of position across network. Hotels fully booked in Atlanta area.',
      2500, 8000, 800000, 96,
@@ -932,9 +930,9 @@ INSERT INTO HISTORICAL_INCIDENTS VALUES
      PARSE_JSON('["Preemptive cancellations", "Crew pre-positioning", "Deicing fluid stockpile", "Partner airline rebooking", "Bus transportation for crews"]'),
      'Earlier preemptive action reduces recovery time. Pre-position crews 48 hours ahead. Maintain deicing fluid reserve. Create crew hotel agreements in advance.',
      45000000, 'Crews stranded without hotels. Duty time violations occurred. Passengers slept in terminals.',
-     PARSE_JSON('["INC001", "INC003"]'), NULL, CURRENT_TIMESTAMP()),
-     
-    ('INC003', '2023-08-15', 'MECHANICAL', 'FLEET_GROUNDING', 'SEVERE', 'ATL',
+     PARSE_JSON('["INC001", "INC003"]'), NULL::VECTOR(FLOAT, 768), CURRENT_TIMESTAMP()
+UNION ALL
+SELECT 'INC003', '2023-08-15', 'MECHANICAL', 'FLEET_GROUNDING', 'SEVERE', 'ATL',
      'FAA AD requires emergency inspection of B737 engine mounts',
      'Airworthiness Directive issued requiring immediate inspection of engine pylon mounts on B737-800/900 fleet. 350 aircraft grounded pending inspection. Each inspection requires 4-6 hours.',
      1200, 5000, 300000, 72,
@@ -942,9 +940,9 @@ INSERT INTO HISTORICAL_INCIDENTS VALUES
      PARSE_JSON('["Prioritized hub inspections", "Mechanic overtime callout", "24/7 inspection operations", "Aircraft swap where possible", "Wet-leased replacement capacity"]'),
      'Maintain inspection capability at all overnight stations. Cross-train mechanics on common ADs. Have wet-lease agreements ready.',
      25000000, 'Insufficient mechanics at spoke stations. Some aircraft sat for 24+ hours waiting for inspection.',
-     PARSE_JSON('["INC002"]'), NULL, CURRENT_TIMESTAMP()),
-     
-    ('INC004', '2024-01-15', 'ATC', 'GROUND_STOP', 'MODERATE', 'JFK',
+     PARSE_JSON('["INC002"]'), NULL::VECTOR(FLOAT, 768), CURRENT_TIMESTAMP()
+UNION ALL
+SELECT 'INC004', '2024-01-15', 'ATC', 'GROUND_STOP', 'MODERATE', 'JFK',
      'FAA ground stop due to staffing shortage at NY TRACON',
      'ATC staffing shortage forced ground stop affecting all NYC airports. 3-hour ground stop extended to 5 hours. Created cascading delays across Eastern seaboard.',
      400, 2000, 100000, 8,
@@ -952,9 +950,9 @@ INSERT INTO HISTORICAL_INCIDENTS VALUES
      PARSE_JSON('["Departure holds at origin", "Diversions to PHL/BOS", "Duty time extensions", "Meal vouchers", "Rebooking assistance"]'),
      'Monitor FAA staffing announcements. Pre-plan diversion airports. Have crew swap agreements with partners.',
      8000000, 'Crews timed out at JFK. Passengers missed connections.',
-     NULL, NULL, CURRENT_TIMESTAMP()),
-     
-    ('INC005', '2023-06-28', 'CREW', 'PILOT_SHORTAGE', 'MODERATE', 'MSP',
+     NULL, NULL::VECTOR(FLOAT, 768), CURRENT_TIMESTAMP()
+UNION ALL
+SELECT 'INC005', '2023-06-28', 'CREW', 'PILOT_SHORTAGE', 'MODERATE', 'MSP',
      'Reserve pilot shortage at Minneapolis hub during summer peak',
      'Combination of training schedules, vacations, and sick calls depleted reserve pilot pool. Unable to cover 15 open trips. Flights cancelled due to crew unavailability.',
      15, 500, 50000, 24,
@@ -962,7 +960,7 @@ INSERT INTO HISTORICAL_INCIDENTS VALUES
      PARSE_JSON('["Reserve extension", "Premium pay offers", "Training reassignment", "Strategic cancellations"]'),
      'Maintain larger reserve buffer during peak season. Cross-utilize reserves across nearby bases. Consider regional pilot partnerships.',
      2000000, 'Morale impact from cancelled vacations. Union pushback on reserve extensions.',
-     PARSE_JSON('["INC001"]'), NULL, CURRENT_TIMESTAMP());
+     PARSE_JSON('["INC001"]'), NULL::VECTOR(FLOAT, 768), CURRENT_TIMESTAMP();
 
 -- ============================================================================
 -- 12. CREW DUTY LOG (Sample for active crew - last 30 days)
