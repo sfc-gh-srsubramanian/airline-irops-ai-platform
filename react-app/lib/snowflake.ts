@@ -19,25 +19,27 @@ function getOAuthToken(): string | null {
 }
 
 function getConfig(): snowflake.ConnectionOptions {
-  const base = {
-    account: process.env.SNOWFLAKE_ACCOUNT || "SFSENORTHAMERICA-SRSUBRAMANIAN_AWS1",
-    warehouse: process.env.SNOWFLAKE_WAREHOUSE || "PHANTOM_IROPS_WH",
-    database: process.env.SNOWFLAKE_DATABASE || "PHANTOM_IROPS",
-    schema: process.env.SNOWFLAKE_SCHEMA || "ANALYTICS",
-  };
-
   const token = getOAuthToken();
+  
   if (token) {
+    const host = process.env.SNOWFLAKE_HOST;
     return {
-      ...base,
-      host: process.env.SNOWFLAKE_HOST,
-      token,
-      authenticator: "oauth",
+      accessUrl: host ? `https://${host}` : undefined,
+      account: process.env.SNOWFLAKE_ACCOUNT || "SFSENORTHAMERICA-SRSUBRAMANIAN_AWS1",
+      authenticator: "OAUTH",
+      token: token,
+      warehouse: process.env.SNOWFLAKE_WAREHOUSE || "PHANTOM_IROPS_WH",
+      database: process.env.SNOWFLAKE_DATABASE || "PHANTOM_IROPS",
+      schema: process.env.SNOWFLAKE_SCHEMA || "ANALYTICS",
+      clientSessionKeepAlive: true,
     };
   }
 
   return {
-    ...base,
+    account: process.env.SNOWFLAKE_ACCOUNT || "SFSENORTHAMERICA-SRSUBRAMANIAN_AWS1",
+    warehouse: process.env.SNOWFLAKE_WAREHOUSE || "PHANTOM_IROPS_WH",
+    database: process.env.SNOWFLAKE_DATABASE || "PHANTOM_IROPS",
+    schema: process.env.SNOWFLAKE_SCHEMA || "ANALYTICS",
     username: process.env.SNOWFLAKE_USER || "SRSUBRAMANIAN",
     password: process.env.SNOWFLAKE_PASSWORD,
     authenticator: "SNOWFLAKE",

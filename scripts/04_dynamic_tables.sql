@@ -852,6 +852,88 @@ CROSS JOIN (
 WHERE (f.needs_captain AND c.required_role = 'CAPTAIN')
    OR (f.needs_first_officer AND c.required_role = 'FIRST_OFFICER');
 
+-- ----------------------------------------------------------------------------
+-- V_GOLDEN_RECORD: Real-time VIEW (fallback when dynamic table is stale)
+-- ----------------------------------------------------------------------------
+-- This view provides the same data as MART_GOLDEN_RECORD but queries underlying
+-- tables directly. Use this when the dynamic table shows stale data.
+-- The React app's ghost-planes API uses this view for guaranteed fresh data.
+
+CREATE OR REPLACE VIEW ANALYTICS.V_GOLDEN_RECORD AS
+SELECT 
+    f.flight_id,
+    f.flight_number,
+    f.flight_date,
+    f.origin,
+    f.origin_city,
+    f.destination,
+    f.destination_city,
+    f.scheduled_departure_utc,
+    f.scheduled_arrival_utc,
+    f.actual_departure_utc,
+    f.status AS flight_status,
+    f.delay_category,
+    f.departure_delay_minutes,
+    f.aircraft_id,
+    f.tail_number,
+    f.aircraft_type_code,
+    ac.current_location AS aircraft_actual_location,
+    ac.status AS aircraft_status,
+    ac.is_operationally_available AS aircraft_available,
+    ac.maintenance_health_score AS aircraft_health,
+    ac.mel_items_count AS aircraft_mel_count,
+    CASE WHEN f.status IN ('SCHEDULED', 'BOARDING') AND ac.current_location != f.origin THEN TRUE ELSE FALSE END AS is_ghost_flight,
+    CASE WHEN f.status IN ('SCHEDULED', 'BOARDING') AND ac.current_location != f.origin 
+         THEN 'Aircraft ' || f.tail_number || ' is at ' || ac.current_location || ' but flight departs from ' || f.origin
+        ELSE NULL END AS ghost_flight_reason,
+    f.captain_id,
+    cap.full_name AS captain_name,
+    cap.base_airport AS captain_base,
+    cap.availability_status AS captain_availability,
+    cap.monthly_hours_remaining AS captain_monthly_hours_left,
+    cap.qualified_aircraft_types AS captain_type_ratings,
+    CASE WHEN f.captain_id IS NOT NULL AND NOT CONTAINS(cap.qualified_aircraft_types, f.aircraft_type_code) THEN TRUE ELSE FALSE END AS captain_not_qualified,
+    f.first_officer_id,
+    fo.full_name AS first_officer_name,
+    fo.base_airport AS fo_base,
+    fo.availability_status AS fo_availability,
+    fo.monthly_hours_remaining AS fo_monthly_hours_left,
+    f.origin_weather_category,
+    f.origin_weather_impact,
+    f.origin_ground_stop,
+    f.dest_weather_category,
+    f.dest_weather_impact,
+    f.dest_ground_stop,
+    f.has_active_disruption,
+    f.disruption_type,
+    f.disruption_severity,
+    f.disruption_priority,
+    f.recovery_status AS disruption_recovery_status,
+    f.passengers_booked,
+    f.load_factor,
+    f.estimated_pax_cost_usd,
+    f.estimated_crew_cost_usd,
+    f.estimated_pax_cost_usd + f.estimated_crew_cost_usd AS total_estimated_cost,
+    f.needs_captain,
+    f.needs_first_officer,
+    f.flight_health_score,
+    CASE 
+        WHEN f.status IN ('SCHEDULED', 'BOARDING') AND ac.current_location != f.origin THEN 100
+        WHEN f.needs_captain OR f.needs_first_officer THEN 95
+        WHEN f.has_active_disruption AND f.disruption_severity = 'CRITICAL' THEN 90
+        WHEN f.origin_ground_stop OR f.dest_ground_stop THEN 85
+        WHEN f.has_active_disruption AND f.disruption_severity = 'SEVERE' THEN 75
+        WHEN f.departure_delay_minutes > 120 THEN 70
+        WHEN f.captain_id IS NOT NULL AND NOT CONTAINS(cap.qualified_aircraft_types, f.aircraft_type_code) THEN 65
+        ELSE COALESCE(f.disruption_priority, 0)
+    END AS recovery_priority_score,
+    f.calculated_at AS last_updated,
+    CURRENT_TIMESTAMP() AS golden_record_timestamp
+FROM INTERMEDIATE.INT_FLIGHT_DISRUPTION_IMPACT f
+LEFT JOIN STAGING.STG_AIRCRAFT ac ON f.aircraft_id = ac.aircraft_id
+LEFT JOIN STAGING.STG_CREW cap ON f.captain_id = cap.crew_id
+LEFT JOIN STAGING.STG_CREW fo ON f.first_officer_id = fo.crew_id;
+
 -- ============================================================================
 -- DYNAMIC TABLES PIPELINE COMPLETE
 -- ============================================================================
@@ -869,7 +951,8 @@ WHERE (f.needs_captain AND c.required_role = 'CAPTAIN')
 --                             └── ANALYTICS (business marts)
 --                                   ├── MART_OPERATIONAL_SUMMARY
 --                                   ├── MART_GOLDEN_RECORD (THE KEY!)
---                                   └── MART_CREW_RECOVERY_CANDIDATES
+--                                   ├── MART_CREW_RECOVERY_CANDIDATES
+--                                   └── V_GOLDEN_RECORD (real-time view fallback)
 --
 -- Key features:
 --   - 1-minute target lag for real-time updates
@@ -877,4 +960,5 @@ WHERE (f.needs_captain AND c.required_role = 'CAPTAIN')
 --   - Pre-computed crew rankings for One-Click Recovery
 --   - Network health scoring
 --   - Cost impact estimation
+--   - V_GOLDEN_RECORD view as fallback for stale dynamic tables
 -- ============================================================================

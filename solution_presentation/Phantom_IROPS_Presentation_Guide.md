@@ -41,11 +41,9 @@ This guide provides a structured walkthrough for demonstrating the Phantom Airli
    ./deploy.sh
    ```
 
-2. **Start React dashboard** (local development):
-   ```bash
-   cd react-app && npm run dev
-   ```
-   Access at `http://localhost:3000`
+2. **Access React dashboard**:
+   - **SPCS (Production)**: https://irrhg2-sfsenorthamerica-srsubramanian-aws1.snowflakecomputing.app
+   - **Local development**: `cd react-app && npm run dev` → http://localhost:3000
 
 3. **Open Snowsight** in a separate browser tab for SQL queries
 
@@ -92,7 +90,7 @@ This guide provides a structured walkthrough for demonstrating the Phantom Airli
 **Purpose:** Set the stage with live crisis metrics
 
 **Steps:**
-1. Open the **React dashboard** at `http://localhost:3000`
+1. Open the **React dashboard** (SPCS or localhost)
 2. Navigate to the **CrowdStrike Scenario** tab
 3. Show the **live metrics**:
    - Affected flights count
@@ -110,7 +108,7 @@ This guide provides a structured walkthrough for demonstrating the Phantom Airli
 **The Story:** *"Imagine you're an operations manager at 3 AM during a storm. Your scheduling system says Captain Smith is flying Flight 1234 out of Atlanta. But Captain Smith checked into a hotel in Chicago six hours ago. The aircraft? It diverted to Miami. This is a 'ghost flight'—and during CrowdStrike, they were everywhere."*
 
 **Steps:**
-1. Open the **React dashboard** at `http://localhost:3000`
+1. Open the **React dashboard** (SPCS or localhost)
 2. Navigate to the **Ghost Planes** tab
 3. Point to the "Ghost Flights" count
 4. Click **Ghost Planes** in the sidebar
@@ -274,7 +272,10 @@ SELECT ML_MODELS.CONTRACT_BOT_QUERY('What is the maximum FDP for a 6am report?')
 **Steps:**
 1. Show the Snowsight Data panel:
    - **7 schemas**: RAW, STAGING, INTERMEDIATE, ANALYTICS, ML_MODELS, SEMANTIC_MODELS, CORTEX_SEARCH
-   - **17 RAW tables** (including BOOKINGS with elite loyalty coverage for every day)
+   - **17 RAW tables** (including BOOKINGS with elite loyalty coverage)
+   - **180K+ rebooking options** pre-computed
+   - **37K+ ghost flights** detected
+   - **24M+ crew recovery candidates** ranked
    - **10 Dynamic Tables** (chained pipeline with 1-minute lag)
    - **1 Semantic View** (IROPS_ANALYTICS for text-to-SQL)
    - **1 Cortex Agent** (IROPS_ASSISTANT) with 2 Cortex Search services
@@ -357,8 +358,16 @@ If using slides alongside the demo, here's the recommended deck structure:
 ## 🔧 Troubleshooting
 
 ### Dashboard not loading?
+
+**Local:**
 ```bash
 cd react-app && npm run dev
+```
+
+**SPCS:** Check service status:
+```sql
+CALL SYSTEM$GET_SERVICE_STATUS('PHANTOM_IROPS.RAW.IROPS_DASHBOARD');
+SELECT SYSTEM$GET_SERVICE_LOGS('PHANTOM_IROPS.RAW.IROPS_DASHBOARD', 0, 'dashboard', 500);
 ```
 
 ### Data looks empty?

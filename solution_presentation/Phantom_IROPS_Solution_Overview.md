@@ -224,11 +224,14 @@ RAW → STAGING (5 DTs) → INTERMEDIATE (2 DTs) → ANALYTICS (3 DTs)
 | Classification | Snowflake ML | Delay prediction |
 | Regression | Snowflake ML | Cost estimation |
 
-### Data Volumes
+### Data Volumes (Current)
 
 | Entity | Count | Refresh |
 |--------|-------|---------|
 | Flights | 500K | Daily |
+| Rebooking Options | 180K+ | Real-time |
+| Ghost Flights | 37K+ | 1 minute |
+| Crew Recovery Candidates | 24M+ | 1 minute |
 | Crew status | 40K | 1 minute |
 | Aircraft status | 1K | 1 minute |
 | Weather | 130K | 5 minutes |
@@ -236,9 +239,30 @@ RAW → STAGING (5 DTs) → INTERMEDIATE (2 DTs) → ANALYTICS (3 DTs)
 
 ---
 
-## Deployment
+## Deployment Options
 
-### One-Command Setup
+### Option 1: SPCS (Production - Recommended)
+
+The React dashboard is deployed to Snowpark Container Services:
+
+**Live URL**: https://irrhg2-sfsenorthamerica-srsubramanian-aws1.snowflakecomputing.app
+
+```sql
+-- Check service status
+CALL SYSTEM$GET_SERVICE_STATUS('PHANTOM_IROPS.RAW.IROPS_DASHBOARD');
+
+-- View logs
+SELECT SYSTEM$GET_SERVICE_LOGS('PHANTOM_IROPS.RAW.IROPS_DASHBOARD', 0, 'dashboard', 500);
+```
+
+### Option 2: Local Development
+
+```bash
+cd react-app && npm run dev
+# Access at http://localhost:3000
+```
+
+### Backend Deployment
 
 ```bash
 ./deploy.sh <connection_name>
@@ -287,6 +311,7 @@ RAW → STAGING (5 DTs) → INTERMEDIATE (2 DTs) → ANALYTICS (3 DTs)
 ### Phase 2 (Q2 2026)
 - Real-time ADS-B aircraft tracking integration
 - ~~Passenger rebooking optimization~~ ✅ COMPLETED
+- ~~SPCS deployment~~ ✅ COMPLETED
 - Proactive disruption prediction (6-hour horizon)
 
 ### Phase 3 (Q3 2026)
