@@ -58,9 +58,19 @@ run_sql() {
     snow sql -c "${CONNECTION_NAME}" -q "${sql}" --quiet 2>/dev/null || true
 }
 
+# Drop SPCS service first (if exists)
+echo -e "${YELLOW}► Dropping SPCS service (if exists)...${NC}"
+run_sql "USE ROLE ACCOUNTADMIN;"
+run_sql "DROP SERVICE IF EXISTS ${FULL_PREFIX}.RAW.IROPS_DASHBOARD;"
+echo -e "${GREEN}  ✓ SPCS service dropped${NC}"
+
+# Drop compute pool
+echo -e "${YELLOW}► Dropping compute pool ${FULL_PREFIX}_POOL (if exists)...${NC}"
+run_sql "DROP COMPUTE POOL IF EXISTS ${FULL_PREFIX}_POOL;"
+echo -e "${GREEN}  ✓ Compute pool dropped${NC}"
+
 # Drop database (this drops all objects inside)
 echo -e "${YELLOW}► Dropping database ${FULL_PREFIX}...${NC}"
-run_sql "USE ROLE ACCOUNTADMIN;"
 run_sql "DROP DATABASE IF EXISTS ${FULL_PREFIX};"
 echo -e "${GREEN}  ✓ Database dropped${NC}"
 
@@ -80,6 +90,8 @@ echo -e "${GREEN}    ✓ Cleanup Complete!${NC}"
 echo -e "${BLUE}============================================================${NC}"
 echo ""
 echo -e "The following objects have been removed:"
+echo -e "  • SPCS Service: ${FULL_PREFIX}.RAW.IROPS_DASHBOARD"
+echo -e "  • Compute Pool: ${FULL_PREFIX}_POOL"
 echo -e "  • Database: ${FULL_PREFIX}"
 echo -e "  • Warehouse: ${FULL_PREFIX}_WH"
 echo -e "  • Role: ${PROJECT_ROLE}"

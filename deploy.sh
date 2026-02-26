@@ -30,6 +30,7 @@ BASE_PREFIX="PHANTOM_IROPS"
 FULL_PREFIX="${ENVIRONMENT_PREFIX:+${ENVIRONMENT_PREFIX}_}${BASE_PREFIX}"
 PROJECT_ROLE="${FULL_PREFIX}_ADMIN"
 WAREHOUSE_SIZE="MEDIUM"
+DEPLOY_SPCS="${DEPLOY_SPCS:-no}"
 
 # Script directory
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -42,6 +43,7 @@ echo -e "Connection:    ${GREEN}${CONNECTION_NAME}${NC}"
 echo -e "Database:      ${GREEN}${FULL_PREFIX}${NC}"
 echo -e "Role:          ${GREEN}${PROJECT_ROLE}${NC}"
 echo -e "Warehouse:     ${GREEN}${FULL_PREFIX}_WH${NC}"
+echo -e "SPCS Deploy:   ${GREEN}${DEPLOY_SPCS}${NC}"
 echo ""
 
 # Function to run SQL file with session variables
@@ -133,6 +135,60 @@ echo -e "${BLUE}Phase 8: Cortex AI Functions${NC}"
 echo -e "${BLUE}────────────────────────────────────────────────────────────${NC}"
 run_sql_file "${SCRIPT_DIR}/scripts/08_cortex_ai_functions.sql" "Creating AI functions and Contract Bot"
 
+# Phase 9: SPCS Deployment (optional)
+if [ "${DEPLOY_SPCS}" = "yes" ]; then
+    echo ""
+    echo -e "${BLUE}────────────────────────────────────────────────────────────${NC}"
+    echo -e "${BLUE}Phase 9: SPCS Dashboard Deployment${NC}"
+    echo -e "${BLUE}────────────────────────────────────────────────────────────${NC}"
+    
+    REACT_APP_DIR="${SCRIPT_DIR}/react-app"
+    REGISTRY="sfsenorthamerica-srsubramanian-aws1.registry.snowflakecomputing.com/phantom_irops/raw/images"
+    
+    # Build Docker image
+    echo -e "${YELLOW}► Building Docker image (linux/amd64)...${NC}"
+    cd "${REACT_APP_DIR}"
+    docker build --platform linux/amd64 -t irops-dashboard:latest .
+    docker tag irops-dashboard:latest ${REGISTRY}/irops-dashboard:latest
+    
+    # Push to registry
+    echo -e "${YELLOW}► Pushing to Snowflake registry...${NC}"
+    docker push ${REGISTRY}/irops-dashboard:latest
+    
+    # Create compute pool and service
+    echo -e "${YELLOW}► Creating SPCS compute pool and service...${NC}"
+    run_sql "USE ROLE ACCOUNTADMIN;
+    CREATE COMPUTE POOL IF NOT EXISTS ${FULL_PREFIX}_POOL
+        MIN_NODES = 1 MAX_NODES = 1
+        INSTANCE_FAMILY = CPU_X64_XS
+        AUTO_RESUME = TRUE;"
+    
+    run_sql "USE ROLE ACCOUNTADMIN;
+    CREATE SERVICE IF NOT EXISTS ${FULL_PREFIX}.RAW.IROPS_DASHBOARD
+        IN COMPUTE POOL ${FULL_PREFIX}_POOL
+        FROM SPECIFICATION \$\$
+        spec:
+          containers:
+          - name: app
+            image: /${FULL_PREFIX}/raw/images/irops-dashboard:latest
+            env:
+              SNOWFLAKE_WAREHOUSE: ${FULL_PREFIX}_WH
+          endpoints:
+          - name: ui
+            port: 8080
+            public: true
+        \$\$
+        MIN_INSTANCES = 1 MAX_INSTANCES = 1
+        EXTERNAL_ACCESS_INTEGRATIONS = (${FULL_PREFIX}_EGRESS);"
+    
+    echo -e "${GREEN}  ✓ SPCS deployment complete${NC}"
+    
+    # Get endpoint URL
+    ENDPOINT_URL=$(snow sql -c "${CONNECTION_NAME}" -q "SHOW ENDPOINTS IN SERVICE ${FULL_PREFIX}.RAW.IROPS_DASHBOARD;" --quiet 2>/dev/null | grep -o 'https://[^"]*' | head -1)
+    echo -e "${CYAN}  Dashboard URL: ${ENDPOINT_URL}${NC}"
+    cd "${SCRIPT_DIR}"
+fi
+
 # Calculate deployment time
 END_TIME=$(date +%s)
 DURATION=$((END_TIME - START_TIME))
@@ -165,7 +221,15 @@ echo -e "  • 3 Intelligence Agents"
 echo -e "  • Rebooking Options table for passenger prioritization"
 echo -e "  • ML infrastructure (Feature Store + Model Registry ready)"
 echo -e "  • 10+ Cortex AI Functions"
+if [ "${DEPLOY_SPCS}" = "yes" ]; then
+    echo -e "  • SPCS Dashboard Service (irops-dashboard)"
+fi
 echo ""
+if [ "${DEPLOY_SPCS}" != "yes" ]; then
+    echo -e "${BLUE}SPCS Dashboard (Optional):${NC}"
+    echo -e "  To deploy: ${YELLOW}DEPLOY_SPCS=yes ./deploy.sh ${CONNECTION_NAME}${NC}"
+    echo ""
+fi
 echo -e "${BLUE}ML Notebooks (Optional - for full Feature Store integration):${NC}"
 echo -e "  • notebooks/01_delay_prediction_model.ipynb"
 echo -e "  • notebooks/02_crew_ranking_model.ipynb"

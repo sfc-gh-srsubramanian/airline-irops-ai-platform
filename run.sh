@@ -181,7 +181,34 @@ ORDER BY
 "
 
 echo -e "${BLUE}────────────────────────────────────────────────────────────${NC}"
-echo -e "${BLUE}9. AI Function Test${NC}"
+echo -e "${BLUE}9. SPCS Service Status${NC}"
+echo -e "${BLUE}────────────────────────────────────────────────────────────${NC}"
+
+echo -e "${YELLOW}► Checking SPCS dashboard status...${NC}"
+SPCS_STATUS=$(snow sql -c "${CONNECTION_NAME}" -q "
+    USE ROLE ${PROJECT_ROLE};
+    USE DATABASE ${FULL_PREFIX};
+    SHOW SERVICES IN SCHEMA RAW;
+" 2>/dev/null | grep -i "IROPS_DASHBOARD" || echo "")
+
+if [ -n "${SPCS_STATUS}" ]; then
+    snow sql -c "${CONNECTION_NAME}" -q "
+        USE ROLE ${PROJECT_ROLE};
+        USE DATABASE ${FULL_PREFIX};
+        SELECT name, status, current_instances, target_instances 
+        FROM TABLE(RESULT_SCAN(LAST_QUERY_ID()))
+        WHERE name = 'IROPS_DASHBOARD';
+    " 2>/dev/null
+    # Get endpoint URL
+    ENDPOINT_URL=$(snow sql -c "${CONNECTION_NAME}" -q "SHOW ENDPOINTS IN SERVICE ${FULL_PREFIX}.RAW.IROPS_DASHBOARD;" --quiet 2>/dev/null | grep -o 'https://[^"]*' | head -1)
+    echo -e "${GREEN}  ✓ SPCS Dashboard: ${ENDPOINT_URL}${NC}"
+else
+    echo -e "${YELLOW}  SPCS dashboard not deployed. Use DEPLOY_SPCS=yes ./deploy.sh to deploy.${NC}"
+fi
+echo ""
+
+echo -e "${BLUE}────────────────────────────────────────────────────────────${NC}"
+echo -e "${BLUE}10. AI Function Test${NC}"
 echo -e "${BLUE}────────────────────────────────────────────────────────────${NC}"
 
 run_query "Testing Contract Bot query" "
@@ -204,7 +231,9 @@ echo -e "  ✓ Disruption tracking operational"
 echo -e "  ✓ Crew availability tracking active"
 echo -e "  ✓ AI functions responding"
 echo -e "  ✓ Rebooking options available"
+echo -e "  ✓ SPCS service check completed"
 echo ""
 echo -e "To run sample queries: ${YELLOW}snow sql -c ${CONNECTION_NAME} -f scripts/09_sample_queries.sql${NC}"
-echo -e "To launch dashboard:   ${YELLOW}cd react-app && npm run dev${NC}"
+echo -e "Local dashboard:       ${YELLOW}cd react-app && npm run dev${NC}"
+echo -e "Deploy to SPCS:        ${YELLOW}DEPLOY_SPCS=yes ./deploy.sh ${CONNECTION_NAME}${NC}"
 echo ""
