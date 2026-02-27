@@ -266,18 +266,13 @@ CREATE OR REPLACE AGENT IROPS_ASSISTANT
   $$;
 
 -- ============================================================================
--- 4. REGISTER WITH SNOWFLAKE INTELLIGENCE
+-- 4. REGISTER WITH SNOWFLAKE INTELLIGENCE (OPTIONAL - RUN MANUALLY)
 -- ============================================================================
 -- Makes the agent visible in the Snowflake Intelligence UI
--- Wrapped in exception block to handle accounts without required privilege
-
-BEGIN
-    ALTER SNOWFLAKE INTELLIGENCE SNOWFLAKE_INTELLIGENCE_OBJECT_DEFAULT ADD AGENT PHANTOM_IROPS.ANALYTICS.IROPS_ASSISTANT;
-EXCEPTION
-    WHEN OTHER THEN
-        -- Gracefully skip if account lacks required privilege
-        NULL;
-END;
+-- NOTE: This command may fail if account lacks required privilege.
+-- Run manually in Snowsight if needed:
+--   ALTER SNOWFLAKE INTELLIGENCE SNOWFLAKE_INTELLIGENCE_OBJECT_DEFAULT 
+--     ADD AGENT PHANTOM_IROPS.ANALYTICS.IROPS_ASSISTANT;
 
 -- ============================================================================
 -- 5. GRANT PERMISSIONS

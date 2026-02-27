@@ -221,7 +221,7 @@ RETURNS TABLE (
 )
 LANGUAGE SQL
 AS
-$
+$$
     WITH ranked_incidents AS (
         SELECT 
             h.incident_id,
@@ -250,7 +250,7 @@ $
         similarity_score
     FROM ranked_incidents
     WHERE rn <= max_results
-$;
+$$;
 
 -- Create view for incident similarity analysis
 CREATE OR REPLACE VIEW INCIDENT_SIMILARITY_ANALYSIS AS
@@ -488,7 +488,7 @@ RETURNS TABLE (
 )
 LANGUAGE SQL
 AS
-$
+$$
     WITH ranked_candidates AS (
         SELECT 
             cr.candidate_rank,
@@ -518,7 +518,7 @@ $
         ' departing ' || departure_time || ' UTC. Reply YES to accept or call Crew Scheduling.' AS notification_message
     FROM ranked_candidates
     WHERE rn <= max_candidates
-$;
+$$;
 
 -- ============================================================================
 -- 7. GRANT PERMISSIONS
