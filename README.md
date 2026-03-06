@@ -106,9 +106,22 @@ The React dashboard runs locally:
 ```bash
 cd react-app
 npm install
+
+# Configure environment (REQUIRED)
+cp .env.example .env.local
+# Edit .env.local with your Snowflake credentials:
+#   SNOWFLAKE_ACCOUNT=your_account_identifier
+#   SNOWFLAKE_USER=your_username
+#   SNOWFLAKE_PRIVATE_KEY_PATH=/path/to/your/rsa_key.p8
+
 npm run dev
 ```
 Access at `http://localhost:3000`
+
+**Note**: The React app requires RSA key-pair authentication. Ensure your Snowflake user has an RSA public key configured:
+```sql
+ALTER USER your_username SET RSA_PUBLIC_KEY='...';
+```
 
 ### Cleanup
 

@@ -4,7 +4,7 @@ const AGENT_FQN = "PHANTOM_IROPS.ANALYTICS.IROPS_ASSISTANT";
 const WAREHOUSE = "PHANTOM_IROPS_WH";
 
 function getAccountUrl(): string {
-  const account = process.env.SNOWFLAKE_ACCOUNT || "SFSENORTHAMERICA-SRSUBRAMANIAN_AWS1";
+  const account = process.env.SNOWFLAKE_ACCOUNT!;
   const accountLower = account.toLowerCase().replace(/_/g, "-");
   return `https://${accountLower}.snowflakecomputing.com`;
 }

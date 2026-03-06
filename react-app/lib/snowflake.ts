@@ -25,7 +25,7 @@ function getConfig(): snowflake.ConnectionOptions {
     const host = process.env.SNOWFLAKE_HOST;
     return {
       accessUrl: host ? `https://${host}` : undefined,
-      account: process.env.SNOWFLAKE_ACCOUNT || "SFSENORTHAMERICA-SRSUBRAMANIAN_AWS1",
+      account: process.env.SNOWFLAKE_ACCOUNT!,
       authenticator: "OAUTH",
       token: token,
       warehouse: process.env.SNOWFLAKE_WAREHOUSE || "PHANTOM_IROPS_WH",
@@ -36,11 +36,11 @@ function getConfig(): snowflake.ConnectionOptions {
   }
 
   return {
-    account: process.env.SNOWFLAKE_ACCOUNT || "SFSENORTHAMERICA-SRSUBRAMANIAN_AWS1",
+    account: process.env.SNOWFLAKE_ACCOUNT!,
     warehouse: process.env.SNOWFLAKE_WAREHOUSE || "PHANTOM_IROPS_WH",
     database: process.env.SNOWFLAKE_DATABASE || "PHANTOM_IROPS",
     schema: process.env.SNOWFLAKE_SCHEMA || "ANALYTICS",
-    username: process.env.SNOWFLAKE_USER || "SRSUBRAMANIAN",
+    username: process.env.SNOWFLAKE_USER!,
     password: process.env.SNOWFLAKE_PASSWORD,
     authenticator: "SNOWFLAKE",
   };
