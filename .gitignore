@@ -4,6 +4,14 @@ ai_coding_rules
 # Streaming components - keep local only
 streaming/
 
+# Eval results - keep local only
+eval_results/
+eval_results_v2/
+eval_results_v3/
+
+# Streamlit app - keep local only
+streamlit/
+
 # Python
 __pycache__/
 *.py[cod]
