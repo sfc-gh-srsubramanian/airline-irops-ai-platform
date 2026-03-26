@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
-import { Users, Search, Bell, CheckCircle, AlertCircle, Loader2, UserCheck, Zap } from "lucide-react";
+import { Users, Search, Bell, CheckCircle, AlertCircle, Loader2, UserCheck, Zap, Info } from "lucide-react";
 import InfoTooltip from "./InfoTooltip";
 import { PAGE_HELP } from "@/lib/pageHelp";
 
@@ -412,6 +412,12 @@ export default function CrewRecovery() {
                 <span className="text-sm font-semibold text-purple-800">AI Recommendation</span>
               </div>
               <p className="text-sm text-slate-700">{agentRecommendation}</p>
+              <div className="flex items-center gap-1 mt-3 pt-3 border-t border-purple-200">
+                <Info className="h-3.5 w-3.5 text-purple-400" />
+                <p className="text-xs text-purple-500">
+                  Fit Score: Calculated based on aircraft type qualification (30pts), base proximity (25pts), monthly hours remaining (up to 20pts), fatigue/recent flight hours (up to 10pts), seniority (5pts), and historical acceptance rate (up to 10pts). FAA non-compliance results in a score of 0.
+                </p>
+              </div>
             </div>
           )}
 

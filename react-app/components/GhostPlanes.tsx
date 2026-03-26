@@ -66,6 +66,7 @@ export default function GhostPlanes() {
   const [notification, setNotification] = useState<{ type: "success" | "error"; message: string } | null>(null);
   const [agentThinking, setAgentThinking] = useState(false);
   const [agentPlan, setAgentPlan] = useState<string | null>(null);
+  const [selectedOptions, setSelectedOptions] = useState<Record<string, number>>({});
 
   useEffect(() => {
     fetchGhostFlights();
@@ -96,6 +97,7 @@ export default function GhostPlanes() {
     setAnalyzing(true);
     setAnalysis(null);
     setAgentPlan(null);
+    setSelectedOptions({});
 
     try {
       const res = await fetch("/api/ghost-planes", {
@@ -125,7 +127,7 @@ export default function GhostPlanes() {
     }
   }, []);
 
-  const executeResolution = useCallback(async (resolutionType: string) => {
+  const executeResolution = useCallback(async (resolutionType: string, option?: Record<string, unknown>) => {
     if (!selectedFlight) return;
 
     setResolving(resolutionType);
@@ -138,16 +140,38 @@ export default function GhostPlanes() {
           flightId: selectedFlight.FLIGHT_ID,
           action: "resolve",
           resolutionType,
+          selectedOption: option || null,
         }),
       });
       const json = await res.json();
 
       if (json.success) {
         setNotification({ type: "success", message: json.message });
+
+        // Optimistic update: remove resolved flight from local state
+        const reason = (selectedFlight.GHOST_FLIGHT_REASON || "").toUpperCase();
+        const isAircraft = reason.startsWith("AIRCRAFT") || reason.startsWith("BOTH");
+        const isCrew = reason.startsWith("CREW") || reason.startsWith("BOTH");
+
+        setGhostFlights(prev => prev.filter(f => f.FLIGHT_ID !== selectedFlight.FLIGHT_ID));
+        setSummary(prev => {
+          if (!prev) return prev;
+          return {
+            ...prev,
+            totalGhostFlights: Math.max(0, prev.totalGhostFlights - 1),
+            missingAircraft: isAircraft ? Math.max(0, prev.missingAircraft - 1) : prev.missingAircraft,
+            missingCrew: isCrew ? Math.max(0, prev.missingCrew - 1) : prev.missingCrew,
+            totalPaxAffected: Math.max(0, prev.totalPaxAffected - (selectedFlight.PAX_BOOKED || 0)),
+          };
+        });
+
         setSelectedFlight(null);
         setAnalysis(null);
         setAgentPlan(null);
-        fetchGhostFlights();
+        setSelectedOptions({});
+
+        // Background refresh after dynamic table lag settles
+        setTimeout(() => fetchGhostFlights(), 60000);
       } else {
         setNotification({ type: "error", message: json.message || "Resolution failed" });
       }
@@ -370,22 +394,39 @@ export default function GhostPlanes() {
 
                   {rec.options && rec.options.length > 0 && (
                     <div className="mb-3 space-y-2">
-                      {rec.options.slice(0, 3).map((opt, idx) => (
-                        <div key={idx} className="text-sm p-2 bg-white rounded border flex items-center justify-between">
+                      {rec.options.slice(0, 5).map((opt, idx) => (
+                        <div
+                          key={idx}
+                          onClick={() => setSelectedOptions(prev => ({ ...prev, [rec.type]: idx }))}
+                          className={`text-sm p-2 rounded border flex items-center justify-between cursor-pointer transition ${
+                            selectedOptions[rec.type] === idx
+                              ? "bg-blue-50 border-blue-500 ring-2 ring-blue-300"
+                              : "bg-white hover:bg-slate-50 border-slate-200"
+                          }`}
+                        >
                           <span>
                             {opt.FULL_NAME || opt.REGISTRATION} 
                             {opt.BASE_AIRPORT && ` (${opt.BASE_AIRPORT})`}
                             {opt.CURRENT_LOCATION && ` @ ${opt.CURRENT_LOCATION}`}
                           </span>
-                          {opt.HOURS_REMAINING && <span className="text-slate-500">{opt.HOURS_REMAINING}h remaining</span>}
+                          <div className="flex items-center gap-2">
+                            {opt.HOURS_REMAINING && <span className="text-slate-500">{opt.HOURS_REMAINING}h remaining</span>}
+                            {selectedOptions[rec.type] === idx && (
+                              <CheckCircle className="h-4 w-4 text-blue-500" />
+                            )}
+                          </div>
                         </div>
                       ))}
                     </div>
                   )}
 
                   <button
-                    onClick={() => executeResolution(rec.type)}
-                    disabled={!!resolving}
+                    onClick={() => {
+                      const selIdx = selectedOptions[rec.type];
+                      const selOpt = rec.options && selIdx !== undefined ? rec.options[selIdx] : undefined;
+                      executeResolution(rec.type, selOpt as Record<string, unknown> | undefined);
+                    }}
+                    disabled={!!resolving || (rec.options && rec.options.length > 0 && selectedOptions[rec.type] === undefined)}
                     className={`flex items-center gap-2 px-4 py-2 rounded-lg text-white transition ${
                       rec.type === "CANCEL_FLIGHT" ? "bg-red-500 hover:bg-red-600" :
                       rec.type === "DELAY_FLIGHT" ? "bg-amber-500 hover:bg-amber-600" :

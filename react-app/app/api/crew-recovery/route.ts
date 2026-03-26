@@ -63,9 +63,12 @@ export async function POST(request: NextRequest) {
           c.BASE_AIRPORT,
           c.MONTHLY_HOURS_REMAINING as HOURS_REMAINING,
           ROUND(
-            (c.MONTHLY_HOURS_REMAINING / 100.0 * 40) +
-            (c.YEARS_OF_SERVICE / 30.0 * 30) +
-            (CASE WHEN c.BASE_AIRPORT = f.ORIGIN THEN 30 ELSE 10 END)
+            (CASE WHEN CONTAINS(c.QUALIFIED_AIRCRAFT_TYPES, f.AIRCRAFT_TYPE_CODE) THEN 30 ELSE 0 END) +
+            (CASE WHEN c.BASE_AIRPORT = f.ORIGIN THEN 25 ELSE 10 END) +
+            (LEAST(20, c.MONTHLY_HOURS_REMAINING * 0.4)) +
+            (GREATEST(0, 10 - c.FLIGHT_HOURS_LAST_7_DAYS * 0.3)) +
+            (CASE WHEN c.SENIORITY_NUMBER < 5000 THEN 5 ELSE 0 END) +
+            (0.5 * 10)
           , 1) as FIT_SCORE,
           c.QUALIFIED_AIRCRAFT_TYPES as QUALIFIED_AIRCRAFT,
           c.AVAILABILITY_STATUS as STATUS

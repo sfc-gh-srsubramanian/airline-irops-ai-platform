@@ -5,6 +5,7 @@ import { Plane, Clock, Users, AlertTriangle, TrendingUp, Filter, Loader2, PlayCi
 import InfoTooltip from "./InfoTooltip";
 import { PAGE_HELP } from "@/lib/pageHelp";
 import { BarChart, Bar, LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from "recharts";
+import LiveEventFeed from "./LiveEventFeed";
 
 interface OperationsData {
   summary: {
@@ -424,6 +425,8 @@ export default function OperationsDashboard({ sidebarFilters, onFiltersChange }:
           </BarChart>
         </ResponsiveContainer>
       </div>
+
+      <LiveEventFeed maxEvents={10} pollIntervalMs={3000} />
     </div>
   );
 }

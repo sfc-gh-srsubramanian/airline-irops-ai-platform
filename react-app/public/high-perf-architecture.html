@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>High-Performance Snowpipe Streaming Architecture</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: linear-gradient(135deg, #f8fbff 0%, #e8f4fc 100%);
+            min-height: 100vh;
+            padding: 40px;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 50px;
+        }
+        .header h1 {
+            color: #29B5E8;
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+        .header p {
+            color: #5a6c7d;
+            font-size: 1.1rem;
+        }
+        .architecture {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 20px;
+            padding: 40px 20px;
+        }
+        .component {
+            background: white;
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 4px 20px rgba(41, 181, 232, 0.15);
+            border: 2px solid #e1f3fa;
+            text-align: center;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+        .component:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 30px rgba(41, 181, 232, 0.25);
+        }
+        .component-icon {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 16px;
+            background: linear-gradient(135deg, #29B5E8 0%, #1a8cba 100%);
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .component-icon svg {
+            width: 48px;
+            height: 48px;
+            fill: white;
+        }
+        .component h3 {
+            color: #1a3a4a;
+            font-size: 1.1rem;
+            margin-bottom: 8px;
+        }
+        .component p {
+            color: #6b8299;
+            font-size: 0.85rem;
+            line-height: 1.4;
+        }
+        .component .tag {
+            display: inline-block;
+            background: #e8f7fc;
+            color: #29B5E8;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-top: 12px;
+        }
+        .arrow {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            color: #29B5E8;
+        }
+        .arrow svg {
+            width: 60px;
+            height: 24px;
+        }
+        .arrow span {
+            font-size: 0.7rem;
+            color: #6b8299;
+            margin-top: 4px;
+        }
+        .channels-container {
+            position: relative;
+        }
+        .channels-badge {
+            position: absolute;
+            top: -10px;
+            right: -10px;
+            background: linear-gradient(135deg, #29B5E8 0%, #1a8cba 100%);
+            color: white;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 0.9rem;
+            box-shadow: 0 2px 10px rgba(41, 181, 232, 0.4);
+        }
+        .metrics {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+            margin-top: 50px;
+        }
+        .metric-card {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+            border: 2px solid #e1f3fa;
+            box-shadow: 0 2px 10px rgba(41, 181, 232, 0.1);
+        }
+        .metric-card .value {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: #29B5E8;
+            margin-bottom: 4px;
+        }
+        .metric-card .label {
+            color: #6b8299;
+            font-size: 0.85rem;
+        }
+        .features {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            margin-top: 40px;
+        }
+        .feature {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            border-left: 4px solid #29B5E8;
+            box-shadow: 0 2px 10px rgba(41, 181, 232, 0.1);
+        }
+        .feature h4 {
+            color: #1a3a4a;
+            font-size: 0.95rem;
+            margin-bottom: 6px;
+        }
+        .feature p {
+            color: #6b8299;
+            font-size: 0.8rem;
+            line-height: 1.5;
+        }
+        .snowflake-logo {
+            width: 48px;
+            height: 48px;
+        }
+        .footer {
+            text-align: center;
+            margin-top: 50px;
+            color: #6b8299;
+            font-size: 0.85rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>High-Performance Snowpipe Streaming</h1>
+            <p>Direct SDK Integration with Multi-Channel Parallel Ingestion</p>
+        </div>
+
+        <div class="architecture">
+            <div class="component">
+                <div class="component-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" stroke="white" fill="none"/>
+                    </svg>
+                </div>
+                <h3>Event Producer</h3>
+                <p>Python Multi-threaded<br/>Application</p>
+                <span class="tag">high_perf_producer_mt.py</span>
+            </div>
+
+            <div class="arrow">
+                <svg viewBox="0 0 60 24">
+                    <defs>
+                        <marker id="arrowhead1" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+                            <polygon points="0 0, 10 3.5, 0 7" fill="#29B5E8"/>
+                        </marker>
+                    </defs>
+                    <line x1="0" y1="12" x2="50" y2="12" stroke="#29B5E8" stroke-width="2" marker-end="url(#arrowhead1)"/>
+                </svg>
+                <span>RSA Key Auth</span>
+            </div>
+
+            <div class="channels-container">
+                <div class="channels-badge">10</div>
+                <div class="component">
+                    <div class="component-icon">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M4 4h4v4H4zM10 4h4v4h-4zM16 4h4v4h-4zM4 10h4v4H4zM10 10h4v4h-4zM16 10h4v4h-4zM4 16h4v4H4zM10 16h4v4h-4zM16 16h4v4h-4z" fill="white"/>
+                        </svg>
+                    </div>
+                    <h3>Streaming Channels</h3>
+                    <p>Parallel ingestion<br/>channels</p>
+                    <span class="tag">~41K events/sec</span>
+                </div>
+            </div>
+
+            <div class="arrow">
+                <svg viewBox="0 0 60 24">
+                    <defs>
+                        <marker id="arrowhead2" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+                            <polygon points="0 0, 10 3.5, 0 7" fill="#29B5E8"/>
+                        </marker>
+                    </defs>
+                    <line x1="0" y1="12" x2="50" y2="12" stroke="#29B5E8" stroke-width="2" marker-end="url(#arrowhead2)"/>
+                </svg>
+                <span>Micro-batch</span>
+            </div>
+
+            <div class="component">
+                <div class="component-icon">
+                    <svg viewBox="0 0 24 24">
+                        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z" fill="white"/>
+                    </svg>
+                </div>
+                <h3>PIPE Object</h3>
+                <p>Server-side buffering<br/>& optimization</p>
+                <span class="tag">Per-GB Billing</span>
+            </div>
+
+            <div class="arrow">
+                <svg viewBox="0 0 60 24">
+                    <defs>
+                        <marker id="arrowhead3" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+                            <polygon points="0 0, 10 3.5, 0 7" fill="#29B5E8"/>
+                        </marker>
+                    </defs>
+                    <line x1="0" y1="12" x2="50" y2="12" stroke="#29B5E8" stroke-width="2" marker-end="url(#arrowhead3)"/>
+                </svg>
+                <span>Commit</span>
+            </div>
+
+            <div class="component">
+                <div class="component-icon">
+                    <svg class="snowflake-logo" viewBox="0 0 24 24">
+                        <path d="M12 2v4m0 12v4M4.93 4.93l2.83 2.83m8.48 8.48l2.83 2.83M2 12h4m12 0h4M4.93 19.07l2.83-2.83m8.48-8.48l2.83-2.83" stroke="white" stroke-width="2" stroke-linecap="round" fill="none"/>
+                        <circle cx="12" cy="12" r="3" fill="white"/>
+                    </svg>
+                </div>
+                <h3>Snowflake Table</h3>
+                <p>FLIGHT_EVENTS<br/>_HIGH_PERF</p>
+                <span class="tag">Streaming Table</span>
+            </div>
+        </div>
+
+        <div class="metrics">
+            <div class="metric-card">
+                <div class="value">~41K</div>
+                <div class="label">Events/Second</div>
+            </div>
+            <div class="metric-card">
+                <div class="value">10</div>
+                <div class="label">Parallel Channels</div>
+            </div>
+            <div class="metric-card">
+                <div class="value">~$0.0087</div>
+                <div class="label">Cost per GB</div>
+            </div>
+            <div class="metric-card">
+                <div class="value">~83%</div>
+                <div class="label">Cost Savings</div>
+            </div>
+        </div>
+
+        <div class="features">
+            <div class="feature">
+                <h4>Direct SDK Integration</h4>
+                <p>No Kafka infrastructure required. Direct connection using snowpipe-streaming SDK v1.2.0 with Rust-based core.</p>
+            </div>
+            <div class="feature">
+                <h4>Per-GB Billing Model</h4>
+                <p>Pay only for data throughput (~$0.0087/GB) instead of per-row pricing, resulting in significant cost savings at scale.</p>
+            </div>
+            <div class="feature">
+                <h4>RSA Key Authentication</h4>
+                <p>Secure key-pair authentication for high-performance SDK. Configured via RSA_PUBLIC_KEY on Snowflake user.</p>
+            </div>
+        </div>
+
+        <div class="footer">
+            <p>Phantom Airlines IROPS &bull; Snowpipe Streaming High-Performance Architecture</p>
+        </div>
+    </div>
+</body>
+</html>

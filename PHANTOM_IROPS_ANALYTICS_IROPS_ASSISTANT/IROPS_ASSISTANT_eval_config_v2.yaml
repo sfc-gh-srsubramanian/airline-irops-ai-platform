@@ -1,0 +1,22 @@
+dataset:
+  dataset_type: "cortex agent"
+  table_name: "PHANTOM_IROPS.ANALYTICS.IROPS_AGENT_EVAL_DATASET"
+  dataset_name: "IROPS_ASSISTANT_eval_v3"
+  column_mapping:
+    query_text: "INPUT_QUERY"
+    ground_truth: "GROUND_TRUTH"
+
+evaluation:
+  agent_params:
+    agent_name: "PHANTOM_IROPS.ANALYTICS.IROPS_ASSISTANT"
+    agent_type: "CORTEX AGENT"
+  run_params:
+    label: "evaluation"
+    description: "Native eval of IROPS_ASSISTANT with inline dataset registration"
+  source_metadata:
+    type: "dataset"
+    dataset_name: "IROPS_ASSISTANT_eval_v3"
+
+metrics:
+  - "answer_correctness"
+  - "logical_consistency"

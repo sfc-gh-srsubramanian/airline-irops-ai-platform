@@ -1,21 +1,37 @@
 import { NextRequest } from "next/server";
+import fs from "fs";
 
 const AGENT_FQN = "PHANTOM_IROPS.ANALYTICS.IROPS_ASSISTANT";
 const WAREHOUSE = "PHANTOM_IROPS_WH";
 
 function getAccountUrl(): string {
+  const host = process.env.SNOWFLAKE_HOST;
+  if (host) return `https://${host}`;
   const account = process.env.SNOWFLAKE_ACCOUNT!;
   const accountLower = account.toLowerCase().replace(/_/g, "-");
   return `https://${accountLower}.snowflakecomputing.com`;
 }
 
+function getAuthToken(): string {
+  const pat = process.env.SNOWFLAKE_PASSWORD;
+  if (pat) return pat;
+  const tokenPath = "/snowflake/session/token";
+  try {
+    if (fs.existsSync(tokenPath)) {
+      return fs.readFileSync(tokenPath, "utf8");
+    }
+  } catch {}
+  throw new Error("No auth token available: SNOWFLAKE_PASSWORD not set and SPCS token file not found");
+}
+
 export async function POST(request: NextRequest) {
   const { query, thread_id } = await request.json();
-  
-  const accountUrl = getAccountUrl();
-  const pat = process.env.SNOWFLAKE_PASSWORD;
 
-  if (!pat) {
+  const accountUrl = getAccountUrl();
+  let pat: string;
+  try {
+    pat = getAuthToken();
+  } catch {
     return new Response(JSON.stringify({ error: "SNOWFLAKE_PASSWORD not configured" }), {
       status: 500,
       headers: { "Content-Type": "application/json" }
@@ -29,7 +45,7 @@ export async function POST(request: NextRequest) {
     messages: [{ role: "user", content: [{ type: "text", text: query }] }],
     warehouse: WAREHOUSE
   };
-  
+
   if (thread_id) {
     requestBody.thread_id = thread_id;
   }
@@ -53,7 +69,6 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    const encoder = new TextEncoder();
     const stream = new ReadableStream({
       async start(controller) {
         const reader = agentResponse.body?.getReader();

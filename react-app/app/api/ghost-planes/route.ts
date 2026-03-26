@@ -3,22 +3,6 @@ import { query } from "@/lib/snowflake";
 
 export async function GET() {
   try {
-    const [totalStats] = await query<{
-      TOTAL_GHOST_FLIGHTS: number;
-      TOTAL_PAX: number;
-      MISSING_CREW_COUNT: number;
-      MISSING_AIRCRAFT_COUNT: number;
-    }>(`
-      SELECT 
-        COUNT(*) as TOTAL_GHOST_FLIGHTS,
-        SUM(COALESCE(PASSENGERS_BOOKED, 0)) as TOTAL_PAX,
-        SUM(CASE WHEN LOWER(GHOST_FLIGHT_REASON) LIKE '%crew%' OR LOWER(GHOST_FLIGHT_REASON) LIKE '%captain%' OR LOWER(GHOST_FLIGHT_REASON) LIKE '%first officer%' THEN 1 ELSE 0 END) as MISSING_CREW_COUNT,
-        SUM(CASE WHEN LOWER(GHOST_FLIGHT_REASON) LIKE '%aircraft%' OR LOWER(GHOST_FLIGHT_REASON) LIKE '%is at%' THEN 1 ELSE 0 END) as MISSING_AIRCRAFT_COUNT
-      FROM PHANTOM_IROPS.ANALYTICS.V_GOLDEN_RECORD
-      WHERE IS_GHOST_FLIGHT = TRUE
-        AND FLIGHT_DATE = CURRENT_DATE()
-    `);
-
     const ghostFlights = await query<{
       FLIGHT_ID: string;
       FLIGHT_NUMBER: string;
@@ -50,23 +34,29 @@ export async function GET() {
         FIRST_OFFICER_NAME as FO_NAME
       FROM PHANTOM_IROPS.ANALYTICS.V_GOLDEN_RECORD
       WHERE IS_GHOST_FLIGHT = TRUE
+        AND FLIGHT_STATUS NOT IN ('CANCELLED', 'ARRIVED')
         AND FLIGHT_DATE = CURRENT_DATE()
       ORDER BY RECOVERY_PRIORITY_SCORE DESC
-      LIMIT 50
     `);
 
+    // Compute summary from the actual result set so card numbers match the table
     const summary = {
-      totalGhostFlights: totalStats?.TOTAL_GHOST_FLIGHTS || ghostFlights.length,
-      missingCrew: totalStats?.MISSING_CREW_COUNT || 0,
-      missingAircraft: totalStats?.MISSING_AIRCRAFT_COUNT || 0,
-      missingBoth: ghostFlights.filter(f => {
-        const reason = (f.GHOST_FLIGHT_REASON || "").toLowerCase();
-        const hasAircraft = reason.includes("aircraft") || reason.includes("is at");
-        const hasCrew = reason.includes("crew") || reason.includes("captain") || reason.includes("first officer");
-        return hasAircraft && hasCrew;
+      totalGhostFlights: ghostFlights.length,
+      missingCrew: ghostFlights.filter(f => {
+        const r = (f.GHOST_FLIGHT_REASON || "").toUpperCase();
+        return r.startsWith("CREW") || r.startsWith("BOTH");
       }).length,
-      avgPriority: ghostFlights.reduce((sum, f) => sum + (f.RECOVERY_PRIORITY_SCORE || 0), 0) / ghostFlights.length || 0,
-      totalPaxAffected: totalStats?.TOTAL_PAX || ghostFlights.reduce((sum, f) => sum + (f.PAX_BOOKED || 0), 0),
+      missingAircraft: ghostFlights.filter(f => {
+        const r = (f.GHOST_FLIGHT_REASON || "").toUpperCase();
+        return r.startsWith("AIRCRAFT") || r.startsWith("BOTH");
+      }).length,
+      missingBoth: ghostFlights.filter(f =>
+        (f.GHOST_FLIGHT_REASON || "").toUpperCase().startsWith("BOTH")
+      ).length,
+      avgPriority: ghostFlights.length > 0
+        ? ghostFlights.reduce((sum, f) => sum + (f.RECOVERY_PRIORITY_SCORE || 0), 0) / ghostFlights.length
+        : 0,
+      totalPaxAffected: ghostFlights.reduce((sum, f) => sum + (f.PAX_BOOKED || 0), 0),
     };
 
     return NextResponse.json({ ghostFlights, summary });
@@ -78,7 +68,7 @@ export async function GET() {
 
 export async function POST(request: NextRequest) {
   try {
-    const { flightId, action, resolutionType } = await request.json();
+    const { flightId, action, resolutionType, selectedOption } = await request.json();
 
     if (action === "analyze") {
       const [flight] = await query<{
@@ -190,16 +180,27 @@ export async function POST(request: NextRequest) {
       
       switch (resolutionType) {
         case "CREW_ASSIGNMENT":
-          result = { success: true, message: "Crew assignment workflow initiated" };
+          if (selectedOption?.CREW_ID) {
+            await query(`
+              UPDATE PHANTOM_IROPS.RAW.FLIGHTS
+              SET CAPTAIN_ID = '${selectedOption.CREW_ID}'
+              WHERE FLIGHT_ID = '${flightId}'
+            `);
+            result = { success: true, message: `Crew member ${selectedOption.FULL_NAME || selectedOption.CREW_ID} assigned to flight.` };
+          } else {
+            result = { success: true, message: "Crew assignment workflow initiated" };
+          }
           break;
         case "AIRCRAFT_SWAP":
-          if (flightInfo?.AIRCRAFT_ID) {
+          const targetAircraftId = selectedOption?.AIRCRAFT_ID || flightInfo?.AIRCRAFT_ID;
+          const targetReg = selectedOption?.REGISTRATION || flightInfo?.TAIL_NUMBER;
+          if (targetAircraftId) {
             await query(`
               UPDATE PHANTOM_IROPS.RAW.AIRCRAFT
               SET CURRENT_LOCATION = '${flightInfo.ORIGIN}'
-              WHERE AIRCRAFT_ID = '${flightInfo.AIRCRAFT_ID}'
+              WHERE AIRCRAFT_ID = '${targetAircraftId}'
             `);
-            result = { success: true, message: `Aircraft ${flightInfo.TAIL_NUMBER} repositioned to ${flightInfo.ORIGIN}. Ghost flight resolved.` };
+            result = { success: true, message: `Aircraft ${targetReg} repositioned to ${flightInfo.ORIGIN}. Ghost flight resolved.` };
           } else {
             result = { success: false, message: "Could not find aircraft information" };
           }

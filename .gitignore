@@ -1,6 +1,9 @@
 # AI coding rules - keep local only
 ai_coding_rules
 
+# Streaming components - keep local only
+streaming/
+
 # Python
 __pycache__/
 *.py[cod]
@@ -25,6 +28,9 @@ venv/
 # Credentials
 .env.local
 credentials.json
+
+# Snowflake local artifacts
+.snowflake/
 
 # Node.js
 node_modules/

@@ -42,7 +42,7 @@ This guide provides a structured walkthrough for demonstrating the Phantom Airli
    ```
 
 2. **Access React dashboard**:
-   - **SPCS (Production)**: https://irrhg2-sfsenorthamerica-srsubramanian-aws1.snowflakecomputing.app
+   - **SPCS (Production)**: https://ewrhg2-sfsenorthamerica-srsubramanian-aws1.snowflakecomputing.app
    - **Local development**: `cd react-app && npm run dev` → http://localhost:3000
 
 3. **Open Snowsight** in a separate browser tab for SQL queries

@@ -1,0 +1,14 @@
+evaluation:
+  agent_params:
+    agent_name: "PHANTOM_IROPS.ANALYTICS.IROPS_ASSISTANT"
+    agent_type: "CORTEX AGENT"
+  run_params:
+    label: "evaluation"
+    description: "Native eval of IROPS_ASSISTANT with answer_correctness and logical_consistency"
+  source_metadata:
+    type: "dataset"
+    dataset_name: "IROPS_ASSISTANT_eval_v1"
+
+metrics:
+  - "answer_correctness"
+  - "logical_consistency"

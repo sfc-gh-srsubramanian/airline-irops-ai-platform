@@ -13,7 +13,6 @@ function getOAuthToken(): string | null {
       return fs.readFileSync(tokenPath, "utf8");
     }
   } catch {
-    // Not in SPCS environment
   }
   return null;
 }
@@ -129,38 +128,6 @@ export async function callAgent(prompt: string): Promise<string> {
       complete: (err, stmt, rows) => {
         if (err) reject(err);
         else resolve((rows as Array<{RESPONSE: string}>)?.[0]?.RESPONSE || "No response");
-      },
-    });
-  });
-}
-
-export async function invokeIROPSAgent(message: string): Promise<{response: string; sql?: string}> {
-  const sql = `
-    WITH agent_response AS (
-      SELECT SNOWFLAKE.CORTEX.INVOKE_AGENT(
-        'PHANTOM_IROPS.ANALYTICS.IROPS_ASSISTANT',
-        ?
-      ) as result
-    )
-    SELECT result:response::STRING as response,
-           result:sql::STRING as sql_query
-    FROM agent_response
-  `;
-  
-  const conn = await getConnection();
-  return new Promise((resolve, reject) => {
-    conn.execute({
-      sqlText: sql,
-      binds: [message],
-      complete: (err, stmt, rows) => {
-        if (err) reject(err);
-        else {
-          const row = (rows as Array<{RESPONSE: string; SQL_QUERY: string}>)?.[0];
-          resolve({
-            response: row?.RESPONSE || "No response from agent",
-            sql: row?.SQL_QUERY
-          });
-        }
       },
     });
   });

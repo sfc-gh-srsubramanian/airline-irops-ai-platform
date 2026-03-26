@@ -19,36 +19,43 @@ export async function GET() {
       MINUTES_AFTER_ORIGINAL: number;
       OPTION_RANK: number;
     }>(`
+      WITH balanced AS (
+        SELECT *,
+          ROW_NUMBER() OVER (
+            PARTITION BY LOYALTY_TIER
+            ORDER BY MINUTES_AFTER_ORIGINAL
+          ) AS tier_rank
+        FROM PHANTOM_IROPS.ANALYTICS.REBOOKING_OPTIONS
+        WHERE ORIGINAL_STATUS = 'CANCELLED'
+          AND DATE(ORIGINAL_DEPARTURE) = CURRENT_DATE()
+          AND OPTION_RANK = 1
+      )
       SELECT 
-        BOOKING_ID,
-        CONFIRMATION_CODE,
-        FIRST_NAME,
-        LAST_NAME,
-        LOYALTY_TIER,
-        ORIGINAL_FLIGHT_NUMBER,
-        ORIGIN,
-        DESTINATION,
-        ORIGINAL_STATUS,
-        REBOOK_FLIGHT_NUMBER,
-        REBOOK_DEPARTURE,
-        AVAILABLE_SEATS,
-        MINUTES_AFTER_ORIGINAL,
-        OPTION_RANK
-      FROM PHANTOM_IROPS.ANALYTICS.REBOOKING_OPTIONS
-      WHERE ORIGINAL_STATUS = 'CANCELLED'
-        AND DATE(ORIGINAL_DEPARTURE) = CURRENT_DATE()
-        AND OPTION_RANK <= 3
+        b.BOOKING_ID,
+        b.CONFIRMATION_CODE,
+        b.FIRST_NAME,
+        b.LAST_NAME,
+        b.LOYALTY_TIER,
+        b.ORIGINAL_FLIGHT_NUMBER,
+        b.ORIGIN,
+        b.DESTINATION,
+        b.ORIGINAL_STATUS,
+        b.REBOOK_FLIGHT_NUMBER,
+        b.REBOOK_DEPARTURE,
+        b.AVAILABLE_SEATS,
+        b.MINUTES_AFTER_ORIGINAL,
+        b.OPTION_RANK
+      FROM balanced b
+      WHERE b.tier_rank <= 20
       ORDER BY 
-        CASE LOYALTY_TIER 
+        CASE b.LOYALTY_TIER 
           WHEN 'DIAMOND' THEN 1 
           WHEN 'PLATINUM' THEN 2 
           WHEN 'GOLD' THEN 3 
           WHEN 'SILVER' THEN 4 
           ELSE 5 
         END,
-        OPTION_RANK,
-        MINUTES_AFTER_ORIGINAL
-      LIMIT 100
+        b.MINUTES_AFTER_ORIGINAL
     `);
 
     return NextResponse.json({ data });

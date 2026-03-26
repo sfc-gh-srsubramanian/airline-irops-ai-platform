@@ -1,0 +1,673 @@
+{
+  "content": [
+    {
+      "thinking": {
+        "text": "\nThe user is asking about procedures for handling an engine fault code, which is clearly a maintenance-related question. This would be best answered using the maintenance_search tool to find relevant procedures and technical documentation. Since this is about procedures rather than quantitative data, I should use the maintenance search tool rather than the analytics tool.\n"
+      },
+      "type": "thinking"
+    },
+    {
+      "tool_use": {
+        "client_side_execute": false,
+        "input": {
+          "agentic_search": false,
+          "limit": 10,
+          "query": "engine fault code procedure handling"
+        },
+        "name": "maintenance_search",
+        "tool_use_id": "toolu_bdrk_01GKHF3nKWrHvaAz4LEXe8AV",
+        "type": "cortex_search"
+      },
+      "type": "tool_use"
+    },
+    {
+      "tool_result": {
+        "content": [
+          {
+            "json": {
+              "search_results": [
+                {
+                  "columns": {
+                    "@CONFIDENCE_SCORE": "0"
+                  },
+                  "doc_id": "LOG00000669",
+                  "doc_title": "SQUAWK",
+                  "id": "cs_25549cb3-c188-4b51-8778-25abd71ec14c",
+                  "source_id": 0,
+                  "text": "ATA 49 - SQUAWK: APU fault light illuminated during pushback. APU restarted, fault cleared."
+                },
+                {
+                  "columns": {
+                    "@CONFIDENCE_SCORE": "0"
+                  },
+                  "doc_id": "LOG00003039",
+                  "doc_title": "SQUAWK",
+                  "id": "cs_1a11b894-8dc8-4f59-b02f-dcf96c13a5d2",
+                  "source_id": 0,
+                  "text": "ATA 49 - SQUAWK: APU fault light illuminated during pushback. APU restarted, fault cleared."
+                },
+                {
+                  "columns": {
+                    "@CONFIDENCE_SCORE": "0"
+                  },
+                  "doc_id": "LOG00003359",
+                  "doc_title": "SQUAWK",
+                  "id": "cs_5e145643-c88d-4403-b626-a484e44d63b7",
+                  "source_id": 0,
+                  "text": "ATA 49 - SQUAWK: APU fault light illuminated during pushback. APU restarted, fault cleared."
+                },
+                {
+                  "columns": {
+                    "@CONFIDENCE_SCORE": "0"
+                  },
+                  "doc_id": "LOG00003249",
+                  "doc_title": "SQUAWK",
+                  "id": "cs_369d50b1-e127-45a6-a00c-439026d3aae8",
+                  "source_id": 0,
+                  "text": "ATA 49 - SQUAWK: APU fault light illuminated during pushback. APU restarted, fault cleared."
+                },
+                {
+                  "columns": {
+                    "@CONFIDENCE_SCORE": "0"
+                  },
+                  "doc_id": "LOG00003919",
+                  "doc_title": "SQUAWK",
+                  "id": "cs_64166c6a-b2f6-46cc-930e-50d22dd1ec62",
+                  "source_id": 0,
+                  "text": "ATA 49 - SQUAWK: APU fault light illuminated during pushback. APU restarted, fault cleared."
+                },
+                {
+                  "columns": {
+                    "@CONFIDENCE_SCORE": "0"
+                  },
+                  "doc_id": "LOG00003099",
+                  "doc_title": "SQUAWK",
+                  "id": "cs_ff7189ad-a5f6-4b4a-90ea-6957f32e53a0",
+                  "source_id": 0,
+                  "text": "ATA 49 - SQUAWK: APU fault light illuminated during pushback. APU restarted, fault cleared."
+                },
+                {
+                  "columns": {
+                    "@CONFIDENCE_SCORE": "0"
+                  },
+                  "doc_id": "LOG00004779",
+                  "doc_title": "SQUAWK",
+                  "id": "cs_d00b9c8d-3f4c-46e4-b0d9-9bb13897450a",
+                  "source_id": 0,
+                  "text": "ATA 49 - SQUAWK: APU fault light illuminated during pushback. APU restarted, fault cleared."
+                },
+                {
+                  "columns": {
+                    "@CONFIDENCE_SCORE": "0"
+                  },
+                  "doc_id": "LOG00003529",
+                  "doc_title": "SQUAWK",
+                  "id": "cs_b3024e45-a19d-472b-9674-3843633be487",
+                  "source_id": 0,
+                  "text": "ATA 49 - SQUAWK: APU fault light illuminated during pushback. APU restarted, fault cleared."
+                },
+                {
+                  "columns": {
+                    "@CONFIDENCE_SCORE": "0"
+                  },
+                  "doc_id": "LOG00000279",
+                  "doc_title": "SQUAWK",
+                  "id": "cs_8c1ca1ae-bd2c-4d7d-8ea0-e247b9de5281",
+                  "source_id": 0,
+                  "text": "ATA 49 - SQUAWK: APU fault light illuminated during pushback. APU restarted, fault cleared."
+                },
+                {
+                  "columns": {
+                    "@CONFIDENCE_SCORE": "0"
+                  },
+                  "doc_id": "LOG00001709",
+                  "doc_title": "SQUAWK",
+                  "id": "cs_fb976d9e-6eb9-422d-b715-94def47afa35",
+                  "source_id": 0,
+                  "text": "ATA 49 - SQUAWK: APU fault light illuminated during pushback. APU restarted, fault cleared."
+                }
+              ],
+              "search_results_persist": {}
+            },
+            "type": "json"
+          }
+        ],
+        "name": "maintenance_search",
+        "status": "success",
+        "tool_use_id": "toolu_bdrk_01GKHF3nKWrHvaAz4LEXe8AV",
+        "type": "cortex_search"
+      },
+      "type": "tool_result"
+    },
+    {
+      "thinking": {
+        "text": "\nThe search results I received are all very similar APU (Auxiliary Power Unit) fault codes, but they're all the same repeated entry about APU fault lights during pushback. These results don't provide comprehensive procedures for handling engine fault codes in general. Let me try a more specific search for engine fault procedures.\n"
+      },
+      "type": "thinking"
+    },
+    {
+      "tool_use": {
+        "client_side_execute": false,
+        "input": {
+          "agentic_search": false,
+          "limit": 10,
+          "query": "engine fault troubleshooting procedures maintenance manual"
+        },
+        "name": "maintenance_search",
+        "tool_use_id": "toolu_bdrk_012sqwyrSfBgoTvkhvpxUevc",
+        "type": "cortex_search"
+      },
+      "type": "tool_use"
+    },
+    {
+      "tool_result": {
+        "content": [
+          {
+            "json": {
+              "search_results": [
+                {
+                  "columns": {
+                    "@CONFIDENCE_SCORE": "0"
+                  },
+                  "doc_id": "LOG00003183",
+                  "doc_title": "SERVICE",
+                  "id": "cs_f278a572-41a9-474a-a8b8-4bf26ac2ef67",
+                  "source_id": 0,
+                  "text": "ATA 28 - SERVICE: Fuel quantity indication System A replaced and calibrated."
+                },
+                {
+                  "columns": {
+                    "@CONFIDENCE_SCORE": "0"
+                  },
+                  "doc_id": "LOG00004493",
+                  "doc_title": "SERVICE",
+                  "id": "cs_6d038422-c35b-418e-9733-8fff8b01d50d",
+                  "source_id": 0,
+                  "text": "ATA 28 - SERVICE: Fuel quantity indication System A replaced and calibrated."
+                },
+                {
+                  "columns": {
+                    "@CONFIDENCE_SCORE": "0"
+                  },
+                  "doc_id": "LOG00003913",
+                  "doc_title": "SERVICE",
+                  "id": "cs_4855548b-ed07-4104-95fa-ee1898ddea93",
+                  "source_id": 0,
+                  "text": "ATA 28 - SERVICE: Fuel quantity indication System A replaced and calibrated."
+                },
+                {
+                  "columns": {
+                    "@CONFIDENCE_SCORE": "0"
+                  },
+                  "doc_id": "LOG00003823",
+                  "doc_title": "SERVICE",
+                  "id": "cs_109fb754-1f96-44b3-9205-b356ffb97507",
+                  "source_id": 0,
+                  "text": "ATA 28 - SERVICE: Fuel quantity indication System A replaced and calibrated."
+                },
+                {
+                  "columns": {
+                    "@CONFIDENCE_SCORE": "0"
+                  },
+                  "doc_id": "LOG00002013",
+                  "doc_title": "SERVICE",
+                  "id": "cs_3b280b78-6d21-413d-9c3a-30cf9819453e",
+                  "source_id": 0,
+                  "text": "ATA 28 - SERVICE: Fuel quantity indication System A replaced and calibrated."
+                },
+                {
+                  "columns": {
+                    "@CONFIDENCE_SCORE": "0"
+                  },
+                  "doc_id": "LOG00003733",
+                  "doc_title": "SERVICE",
+                  "id": "cs_ebae9a42-f174-4140-a658-ff8bee13a1e3",
+                  "source_id": 0,
+                  "text": "ATA 28 - SERVICE: Fuel quantity indication System A replaced and calibrated."
+                },
+                {
+                  "columns": {
+                    "@CONFIDENCE_SCORE": "0"
+                  },
+                  "doc_id": "LOG00000463",
+                  "doc_title": "SERVICE",
+                  "id": "cs_6eb526ab-77f6-4781-a20d-b52df3bcd0dd",
+                  "source_id": 0,
+                  "text": "ATA 28 - SERVICE: Fuel quantity indication System A replaced and calibrated."
+                },
+                {
+                  "columns": {
+                    "@CONFIDENCE_SCORE": "0"
+                  },
+                  "doc_id": "LOG00001433",
+                  "doc_title": "SERVICE",
+                  "id": "cs_ddfa2cc1-8126-445a-94c2-7bb33b87a379",
+                  "source_id": 0,
+                  "text": "ATA 28 - SERVICE: Fuel quantity indication System A replaced and calibrated."
+                },
+                {
+                  "columns": {
+                    "@CONFIDENCE_SCORE": "0"
+                  },
+                  "doc_id": "LOG00004653",
+                  "doc_title": "SERVICE",
+                  "id": "cs_a2d0e764-c3b2-4c9a-ac27-373ed283301d",
+                  "source_id": 0,
+                  "text": "ATA 28 - SERVICE: Fuel quantity indication System A replaced and calibrated."
+                },
+                {
+                  "columns": {
+                    "@CONFIDENCE_SCORE": "0"
+                  },
+                  "doc_id": "LOG00000123",
+                  "doc_title": "SERVICE",
+                  "id": "cs_98be7db7-8241-4186-ad79-b9ee2cbdd4d8",
+                  "source_id": 0,
+                  "text": "ATA 28 - SERVICE: Fuel quantity indication System A replaced and calibrated."
+                }
+              ],
+              "search_results_persist": {}
+            },
+            "type": "json"
+          }
+        ],
+        "name": "maintenance_search",
+        "status": "success",
+        "tool_use_id": "toolu_bdrk_012sqwyrSfBgoTvkhvpxUevc",
+        "type": "cortex_search"
+      },
+      "type": "tool_result"
+    },
+    {
+      "thinking": {
+        "text": "\nThe second search is also returning repetitive results, this time about fuel quantity indication systems. Let me try a broader search focusing on fault handling procedures.\n"
+      },
+      "type": "thinking"
+    },
+    {
+      "tool_use": {
+        "client_side_execute": false,
+        "input": {
+          "agentic_search": false,
+          "limit": 15,
+          "query": "fault handling procedure troubleshooting steps"
+        },
+        "name": "maintenance_search",
+        "tool_use_id": "toolu_bdrk_0144YfwaZPDHrgBGnzdkDBgo",
+        "type": "cortex_search"
+      },
+      "type": "tool_use"
+    },
+    {
+      "tool_result": {
+        "content": [
+          {
+            "json": {
+              "search_results": [
+                {
+                  "columns": {
+                    "@CONFIDENCE_SCORE": "0"
+                  },
+                  "doc_id": "LOG00000217",
+                  "doc_title": "SERVICE",
+                  "id": "cs_1762b460-b942-4a13-a609-b34747ecf9ae",
+                  "source_id": 0,
+                  "text": "ATA 32 - SERVICE: Nose wheel steering feedback unit replaced. System tested."
+                },
+                {
+                  "columns": {
+                    "@CONFIDENCE_SCORE": "0"
+                  },
+                  "doc_id": "LOG00004087",
+                  "doc_title": "SERVICE",
+                  "id": "cs_b326332f-f3b6-4a4b-a077-282498bade35",
+                  "source_id": 0,
+                  "text": "ATA 32 - SERVICE: Nose wheel steering feedback unit replaced. System tested."
+                },
+                {
+                  "columns": {
+                    "@CONFIDENCE_SCORE": "0"
+                  },
+                  "doc_id": "LOG00004977",
+                  "doc_title": "SERVICE",
+                  "id": "cs_b6fc02dd-6098-447e-9534-9e4af841f97a",
+                  "source_id": 0,
+                  "text": "ATA 32 - SERVICE: Nose wheel steering feedback unit replaced. System tested."
+                },
+                {
+                  "columns": {
+                    "@CONFIDENCE_SCORE": "0"
+                  },
+                  "doc_id": "LOG00001507",
+                  "doc_title": "SERVICE",
+                  "id": "cs_da7379fa-f934-41b1-b0ec-42bdbd0ddff6",
+                  "source_id": 0,
+                  "text": "ATA 32 - SERVICE: Nose wheel steering feedback unit replaced. System tested."
+                },
+                {
+                  "columns": {
+                    "@CONFIDENCE_SCORE": "0"
+                  },
+                  "doc_id": "LOG00004547",
+                  "doc_title": "SERVICE",
+                  "id": "cs_4a08f02f-a0b5-44e5-a640-c7663827cac5",
+                  "source_id": 0,
+                  "text": "ATA 32 - SERVICE: Nose wheel steering feedback unit replaced. System tested."
+                },
+                {
+                  "columns": {
+                    "@CONFIDENCE_SCORE": "0"
+                  },
+                  "doc_id": "LOG00002457",
+                  "doc_title": "SERVICE",
+                  "id": "cs_30866514-8c6e-40ec-9df1-4bf1561c794a",
+                  "source_id": 0,
+                  "text": "ATA 32 - SERVICE: Nose wheel steering feedback unit replaced. System tested."
+                },
+                {
+                  "columns": {
+                    "@CONFIDENCE_SCORE": "0"
+                  },
+                  "doc_id": "LOG00003537",
+                  "doc_title": "SERVICE",
+                  "id": "cs_05dcae13-a8b2-4979-8a3c-5055b85698f9",
+                  "source_id": 0,
+                  "text": "ATA 32 - SERVICE: Nose wheel steering feedback unit replaced. System tested."
+                },
+                {
+                  "columns": {
+                    "@CONFIDENCE_SCORE": "0"
+                  },
+                  "doc_id": "LOG00000017",
+                  "doc_title": "SERVICE",
+                  "id": "cs_6a06ca4d-a6bd-400a-a8c9-a60ffec4f10a",
+                  "source_id": 0,
+                  "text": "ATA 32 - SERVICE: Nose wheel steering feedback unit replaced. System tested."
+                },
+                {
+                  "columns": {
+                    "@CONFIDENCE_SCORE": "0"
+                  },
+                  "doc_id": "LOG00004267",
+                  "doc_title": "SERVICE",
+                  "id": "cs_8e02d1db-cace-441c-8462-148387340f5c",
+                  "source_id": 0,
+                  "text": "ATA 32 - SERVICE: Nose wheel steering feedback unit replaced. System tested."
+                },
+                {
+                  "columns": {
+                    "@CONFIDENCE_SCORE": "0"
+                  },
+                  "doc_id": "LOG00003217",
+                  "doc_title": "SERVICE",
+                  "id": "cs_0c8e5c37-0bc8-4386-8ff4-d836735dd63f",
+                  "source_id": 0,
+                  "text": "ATA 32 - SERVICE: Nose wheel steering feedback unit replaced. System tested."
+                },
+                {
+                  "columns": {
+                    "@CONFIDENCE_SCORE": "0"
+                  },
+                  "doc_id": "LOG00003577",
+                  "doc_title": "SERVICE",
+                  "id": "cs_96bf137a-a899-41df-8367-07c3a83a507b",
+                  "source_id": 0,
+                  "text": "ATA 32 - SERVICE: Nose wheel steering feedback unit replaced. System tested."
+                },
+                {
+                  "columns": {
+                    "@CONFIDENCE_SCORE": "0"
+                  },
+                  "doc_id": "LOG00004687",
+                  "doc_title": "SERVICE",
+                  "id": "cs_ee54984b-1129-41fb-bef9-faf3ecda64c3",
+                  "source_id": 0,
+                  "text": "ATA 32 - SERVICE: Nose wheel steering feedback unit replaced. System tested."
+                },
+                {
+                  "columns": {
+                    "@CONFIDENCE_SCORE": "0"
+                  },
+                  "doc_id": "LOG00003407",
+                  "doc_title": "SERVICE",
+                  "id": "cs_0841e660-cc0c-4304-9d73-400d6992ea21",
+                  "source_id": 0,
+                  "text": "ATA 32 - SERVICE: Nose wheel steering feedback unit replaced. System tested."
+                },
+                {
+                  "columns": {
+                    "@CONFIDENCE_SCORE": "0"
+                  },
+                  "doc_id": "LOG00000507",
+                  "doc_title": "SERVICE",
+                  "id": "cs_a719b955-682b-49e5-90d7-b48065b55668",
+                  "source_id": 0,
+                  "text": "ATA 32 - SERVICE: Nose wheel steering feedback unit replaced. System tested."
+                },
+                {
+                  "columns": {
+                    "@CONFIDENCE_SCORE": "0"
+                  },
+                  "doc_id": "LOG00001227",
+                  "doc_title": "SERVICE",
+                  "id": "cs_0029db2d-1cb2-40c7-a5cb-f4b9e347b85b",
+                  "source_id": 0,
+                  "text": "ATA 32 - SERVICE: Nose wheel steering feedback unit replaced. System tested."
+                }
+              ],
+              "search_results_persist": {}
+            },
+            "type": "json"
+          }
+        ],
+        "name": "maintenance_search",
+        "status": "success",
+        "tool_use_id": "toolu_bdrk_0144YfwaZPDHrgBGnzdkDBgo",
+        "type": "cortex_search"
+      },
+      "type": "tool_result"
+    },
+    {
+      "thinking": {
+        "text": "\nI'm getting repetitive maintenance log entries but not comprehensive procedures. Let me try one more specific search for engine-related fault procedures.\n"
+      },
+      "type": "thinking"
+    },
+    {
+      "tool_use": {
+        "client_side_execute": false,
+        "input": {
+          "agentic_search": false,
+          "limit": 10,
+          "query": "ATA 70 71 72 73 74 75 76 77 78 79 engine power plant procedures"
+        },
+        "name": "maintenance_search",
+        "tool_use_id": "toolu_bdrk_01WmnyiAvaZN6mgixXnGVbYj",
+        "type": "cortex_search"
+      },
+      "type": "tool_use"
+    },
+    {
+      "tool_result": {
+        "content": [
+          {
+            "json": {
+              "search_results": [
+                {
+                  "columns": {
+                    "@CONFIDENCE_SCORE": "1"
+                  },
+                  "doc_id": "LOG00000373",
+                  "doc_title": "SERVICE",
+                  "id": "cs_0c5357a7-5092-4d5e-a3f3-59894e69cc84",
+                  "source_id": 0,
+                  "text": "ATA 28 - SERVICE: Fuel quantity indication System A replaced and calibrated."
+                },
+                {
+                  "columns": {
+                    "@CONFIDENCE_SCORE": "1"
+                  },
+                  "doc_id": "LOG00000873",
+                  "doc_title": "SERVICE",
+                  "id": "cs_d03c3890-0c64-4dc2-abd4-c950206849a1",
+                  "source_id": 0,
+                  "text": "ATA 28 - SERVICE: Fuel quantity indication System A replaced and calibrated."
+                },
+                {
+                  "columns": {
+                    "@CONFIDENCE_SCORE": "1"
+                  },
+                  "doc_id": "LOG00002393",
+                  "doc_title": "SERVICE",
+                  "id": "cs_0adc0f23-a130-4dcc-bd2f-59c46682b699",
+                  "source_id": 0,
+                  "text": "ATA 28 - SERVICE: Fuel quantity indication System A replaced and calibrated."
+                },
+                {
+                  "columns": {
+                    "@CONFIDENCE_SCORE": "1"
+                  },
+                  "doc_id": "LOG00004373",
+                  "doc_title": "SERVICE",
+                  "id": "cs_c5e6594a-ad57-4f4a-85a4-c08fd1bda127",
+                  "source_id": 0,
+                  "text": "ATA 28 - SERVICE: Fuel quantity indication System A replaced and calibrated."
+                },
+                {
+                  "columns": {
+                    "@CONFIDENCE_SCORE": "1"
+                  },
+                  "doc_id": "LOG00002313",
+                  "doc_title": "SERVICE",
+                  "id": "cs_f248bd5c-d9fe-4959-b0b2-63772b25cec4",
+                  "source_id": 0,
+                  "text": "ATA 28 - SERVICE: Fuel quantity indication System A replaced and calibrated."
+                },
+                {
+                  "columns": {
+                    "@CONFIDENCE_SCORE": "1"
+                  },
+                  "doc_id": "LOG00003373",
+                  "doc_title": "SERVICE",
+                  "id": "cs_8f489b8a-d7bb-4d56-8de6-96f360cb3aee",
+                  "source_id": 0,
+                  "text": "ATA 28 - SERVICE: Fuel quantity indication System A replaced and calibrated."
+                },
+                {
+                  "columns": {
+                    "@CONFIDENCE_SCORE": "1"
+                  },
+                  "doc_id": "LOG00004893",
+                  "doc_title": "SERVICE",
+                  "id": "cs_b7db3950-ffbf-47da-aa12-c91b39ce1753",
+                  "source_id": 0,
+                  "text": "ATA 28 - SERVICE: Fuel quantity indication System A replaced and calibrated."
+                },
+                {
+                  "columns": {
+                    "@CONFIDENCE_SCORE": "1"
+                  },
+                  "doc_id": "LOG00000003",
+                  "doc_title": "SERVICE",
+                  "id": "cs_1c6afb05-e258-485a-92d7-4733778fb15b",
+                  "source_id": 0,
+                  "text": "ATA 28 - SERVICE: Fuel quantity indication System A replaced and calibrated."
+                },
+                {
+                  "columns": {
+                    "@CONFIDENCE_SCORE": "1"
+                  },
+                  "doc_id": "LOG00002873",
+                  "doc_title": "SERVICE",
+                  "id": "cs_3b1587a5-fbdf-470a-a405-e1e34882485a",
+                  "source_id": 0,
+                  "text": "ATA 28 - SERVICE: Fuel quantity indication System A replaced and calibrated."
+                },
+                {
+                  "columns": {
+                    "@CONFIDENCE_SCORE": "1"
+                  },
+                  "doc_id": "LOG00001313",
+                  "doc_title": "SERVICE",
+                  "id": "cs_c888b335-b2a9-4808-aed2-4ef07f61c12f",
+                  "source_id": 0,
+                  "text": "ATA 28 - SERVICE: Fuel quantity indication System A replaced and calibrated."
+                }
+              ],
+              "search_results_persist": {}
+            },
+            "type": "json"
+          }
+        ],
+        "name": "maintenance_search",
+        "status": "success",
+        "tool_use_id": "toolu_bdrk_01WmnyiAvaZN6mgixXnGVbYj",
+        "type": "cortex_search"
+      },
+      "type": "tool_result"
+    },
+    {
+      "annotations": [
+        {
+          "doc_id": "LOG00000669",
+          "doc_title": "SQUAWK",
+          "index": 1323,
+          "search_result_id": "cs_25549cb3-c188-4b51-8778-25abd71ec14c",
+          "text": "ATA 49 - SQUAWK: APU fault light illuminated during pushback. APU restarted, fault cleared.",
+          "type": "cortex_search_citation"
+        },
+        {
+          "doc_id": "LOG00000217",
+          "doc_title": "SERVICE",
+          "index": 1380,
+          "search_result_id": "cs_1762b460-b942-4a13-a609-b34747ecf9ae",
+          "text": "ATA 32 - SERVICE: Nose wheel steering feedback unit replaced. System tested.",
+          "type": "cortex_search_citation"
+        },
+        {
+          "doc_id": "LOG00003183",
+          "doc_title": "SERVICE",
+          "index": 1444,
+          "search_result_id": "cs_f278a572-41a9-474a-a8b8-4bf26ac2ef67",
+          "text": "ATA 28 - SERVICE: Fuel quantity indication System A replaced and calibrated.",
+          "type": "cortex_search_citation"
+        }
+      ],
+      "text": "\nBased on the available maintenance documentation, I can see maintenance logs that reference ATA (Air Transport Association) chapter codes, which are the standard system for organizing aircraft maintenance procedures. However, the search results primarily show individual maintenance log entries rather than comprehensive procedural documentation.\n\nFrom the available data, I can provide general guidance based on industry standards for engine fault code handling:\n\n**General Engine Fault Code Procedure:**\n\n1. **Identify the Fault Code**: Record the specific engine fault code displayed on the aircraft systems\n2. **Reference ATA Chapter 70-79**: Engine faults typically fall under ATA chapters 70-79 (Power Plant systems)\n3. **Consult the Aircraft Maintenance Manual (AMM)**: Look up the specific fault code in the troubleshooting section\n4. **Follow the Prescribed Steps**: Each fault code has specific troubleshooting procedures\n5. **Document Actions Taken**: Log all maintenance actions in the aircraft maintenance records\n6. **Test System Operation**: Verify the fault has been cleared and system operates normally\n7. **Release to Service**: Complete appropriate paperwork if fault is resolved\n\n**Key Points from Available Documentation:**\n- APU fault lights during pushback can often be cleared by restarting the APU\n- System testing is required after component replacement\n- Fuel system indications require calibration after replacement\n\n\u26a0\ufe0f **Note**: For specific engine fault codes, technicians should always consult the complete Aircraft Maintenance Manual and follow manufacturer-specific procedures. The available search results show maintenance logs but don't contain the detailed procedural documentation needed for comprehensive fault handling guidance.\n",
+      "type": "text"
+    },
+    {
+      "suggested_queries": [
+        {
+          "query": "What are the most common engine fault codes reported in maintenance logs?"
+        },
+        {
+          "query": "How do I access the complete Aircraft Maintenance Manual procedures for ATA 70-79 systems?"
+        }
+      ],
+      "type": "suggested_queries"
+    }
+  ],
+  "metadata": {
+    "usage": {
+      "tokens_consumed": [
+        {
+          "context_window": 200000,
+          "input_tokens": {
+            "cache_read": 101379,
+            "cache_write": 9494,
+            "total": 110888,
+            "uncached": 15
+          },
+          "model_name": "claude-4-sonnet",
+          "output_tokens": {
+            "total": 1172
+          }
+        }
+      ]
+    }
+  },
+  "role": "assistant",
+  "schema_version": "v2",
+  "sequence_number": 172
+}

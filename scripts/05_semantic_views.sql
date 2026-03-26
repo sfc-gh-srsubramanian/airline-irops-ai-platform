@@ -84,6 +84,7 @@ DIMENSIONS (
     CREW.AVAILABILITY_STATUS as AVAILABILITY_STATUS, 
     AIRCRAFT.TAIL_NUMBER as TAIL_NUMBER, 
     AIRCRAFT.AIRCRAFT_STATUS as STATUS,
+    AIRCRAFT.AIRCRAFT_LOCATION as CURRENT_LOCATION WITH SYNONYMS = ('aircraft location', 'where is aircraft') COMMENT = 'Current airport location of the aircraft',
     CREW_SWAP.SWAP_ROLE as REQUIRED_ROLE,
     CREW_SWAP.SWAP_CANDIDATE as CREW_NAME,
     CREW_SWAP.SWAP_BASE as CREW_BASE,
@@ -135,16 +136,23 @@ METRICS (
 COMMENT = 'IROPS Analytics for Phantom Airlines - includes crew swap candidates, passenger loyalty, and rebooking options'
 AI_SQL_GENERATION 'IMPORTANT BUSINESS DEFINITIONS:
 
+## Date Scoping Rules
+CRITICAL: Unless the user explicitly mentions "today", "this week", "yesterday", or a specific date/range, do NOT add any date filter (e.g. CURRENT_DATE(), DATE(col) = ...). Questions like "how many flights are delayed" or "total cancelled flights" mean ALL data, not just today. Only apply date filters when the user explicitly requests a time-bounded result.
+
 ## Hub Airports
 Phantom Airlines operates 5 hub airports: LAX (Los Angeles), JFK (New York), ORD (Chicago), DFW (Dallas), ATL (Atlanta).
 
 ## On-Time Performance (OTP)
 A flight is ON-TIME if departure_delay_minutes <= 15 (A14 industry standard).
 
+## Ghost Flights
+A ghost flight is a SCHEDULED or BOARDING flight where the aircraft current location does not match the flight origin airport. To find ghost flights, JOIN FLIGHTS with AIRCRAFT on AIRCRAFT_ID and filter: flights.STATUS IN (''SCHEDULED'', ''BOARDING'') AND aircraft.AIRCRAFT_LOCATION != flights.ORIGIN. The AIRCRAFT_LOCATION column on the AIRCRAFT table holds the aircraft current airport.
+
 ## Data Conventions
 All enumerated dimension values are stored in UPPERCASE.
 - LOYALTY_TIER: DIAMOND, PLATINUM, GOLD, SILVER, BLUE
 - STATUS: SCHEDULED, DELAYED, CANCELLED, DEPARTED, IN_AIR, LANDED, ARRIVED
+- AVAILABILITY_STATUS: AVAILABLE, ON_DUTY, OFF_DUTY, SICK_LEAVE, TRAINING
 
 ## Rebooking Options
 The REBOOKING_OPTIONS table contains alternative flights for passengers on cancelled or delayed flights.
@@ -152,7 +160,17 @@ The REBOOKING_OPTIONS table contains alternative flights for passengers on cance
 - OPTION_RANK = 1 means the next immediate available flight
 - Use ORIGINAL_STATUS to filter for CANCELLED or DELAYED flights
 - AVAILABLE_SEATS shows capacity on the rebooking flight
-- For today cancellations: ORIGINAL_STATUS = ''CANCELLED'' AND DATE(ORIGINAL_DEPARTURE) = CURRENT_DATE()';
+- When asked about passengers needing rebooking, count ALL cancelled flights unless user specifies "today" or a date range
+- For today cancellations only: ORIGINAL_STATUS = ''CANCELLED'' AND DATE(ORIGINAL_DEPARTURE) = CURRENT_DATE()
+
+## Delayed Flights
+When reporting delayed flight counts, always include the average delay in minutes as well. Use AVG(DEPARTURE_DELAY_MINUTES) alongside the count.
+
+## Crew Availability
+When reporting crew availability, include BOTH available AND unavailable counts by crew type (CAPTAIN, FIRST_OFFICER). Use AVAILABILITY_STATUS to determine availability.
+
+## Mechanical Disruptions
+When asked about mechanical disruptions or maintenance issues, count ALL mechanical disruptions (DISRUPTION_TYPE = ''MECHANICAL'') across the full dataset unless a date is specified.';
 
 -- ============================================================================
 -- GRANT PERMISSIONS

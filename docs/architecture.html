@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Airlines IROPS - Snowpipe Streaming Architecture</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #ffffff;
+            min-height: 100vh;
+            padding: 40px;
+        }
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        h1 {
+            text-align: center;
+            color: #29B5E8;
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+        .subtitle {
+            text-align: center;
+            color: #6E7681;
+            font-size: 1.1rem;
+            margin-bottom: 40px;
+        }
+        .architecture {
+            display: flex;
+            flex-direction: column;
+            gap: 30px;
+        }
+        .layer {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+        .component {
+            background: #ffffff;
+            border: 2px solid #29B5E8;
+            border-radius: 12px;
+            padding: 20px 30px;
+            min-width: 180px;
+            text-align: center;
+            position: relative;
+            box-shadow: 0 4px 12px rgba(41, 181, 232, 0.15);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .component:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(41, 181, 232, 0.25);
+        }
+        .component.primary {
+            background: linear-gradient(135deg, #29B5E8 0%, #1A8BC7 100%);
+            color: white;
+            border: none;
+        }
+        .component.primary .icon {
+            color: white;
+        }
+        .component.snowflake {
+            background: linear-gradient(135deg, #29B5E8 0%, #0D4F8B 100%);
+            color: white;
+            border: none;
+            min-width: 250px;
+        }
+        .icon {
+            font-size: 2rem;
+            margin-bottom: 8px;
+            color: #29B5E8;
+        }
+        .component-name {
+            font-weight: 600;
+            font-size: 1rem;
+            margin-bottom: 4px;
+        }
+        .component-detail {
+            font-size: 0.8rem;
+            opacity: 0.8;
+        }
+        .arrow-down {
+            display: flex;
+            justify-content: center;
+            padding: 10px 0;
+        }
+        .arrow-down svg {
+            width: 40px;
+            height: 40px;
+            color: #29B5E8;
+        }
+        .layer-label {
+            background: #E8F7FC;
+            color: #29B5E8;
+            padding: 8px 20px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin-right: 20px;
+            min-width: 140px;
+            text-align: center;
+        }
+        .metrics-box {
+            background: #E8F7FC;
+            border: 2px solid #29B5E8;
+            border-radius: 16px;
+            padding: 30px;
+            margin-top: 40px;
+        }
+        .metrics-title {
+            color: #29B5E8;
+            font-size: 1.3rem;
+            font-weight: 600;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+        }
+        .metric {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            text-align: center;
+            box-shadow: 0 2px 8px rgba(41, 181, 232, 0.1);
+        }
+        .metric-value {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: #29B5E8;
+        }
+        .metric-label {
+            font-size: 0.9rem;
+            color: #6E7681;
+            margin-top: 5px;
+        }
+        .snowflake-logo {
+            width: 50px;
+            height: 50px;
+            margin-bottom: 10px;
+        }
+        .flow-connector {
+            display: flex;
+            align-items: center;
+            color: #29B5E8;
+            font-size: 1.5rem;
+        }
+        .section-divider {
+            border: none;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, #29B5E8, transparent);
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Airlines IROPS Architecture</h1>
+        <p class="subtitle">Real-Time Flight Event Streaming with Snowpipe Streaming</p>
+        
+        <div class="architecture">
+            <!-- Data Source Layer -->
+            <div class="layer">
+                <span class="layer-label">DATA SOURCE</span>
+                <div class="component">
+                    <div class="icon">✈️</div>
+                    <div class="component-name">Flight Events</div>
+                    <div class="component-detail">Status Updates, Delays, Gates</div>
+                </div>
+                <span class="flow-connector">→</span>
+                <div class="component primary">
+                    <div class="icon">🐍</div>
+                    <div class="component-name">Python Producer</div>
+                    <div class="component-detail">13,100+ events/sec</div>
+                </div>
+            </div>
+
+            <div class="arrow-down">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M12 5v14M5 12l7 7 7-7"/>
+                </svg>
+            </div>
+
+            <!-- Streaming Layer -->
+            <div class="layer">
+                <span class="layer-label">STREAMING</span>
+                <div class="component">
+                    <div class="icon">📨</div>
+                    <div class="component-name">Apache Kafka</div>
+                    <div class="component-detail">Message Broker</div>
+                </div>
+                <span class="flow-connector">→</span>
+                <div class="component">
+                    <div class="icon">🔌</div>
+                    <div class="component-name">Kafka Connect</div>
+                    <div class="component-detail">Snowflake Connector</div>
+                </div>
+                <span class="flow-connector">→</span>
+                <div class="component primary">
+                    <div class="icon">⚡</div>
+                    <div class="component-name">Snowpipe Streaming</div>
+                    <div class="component-detail">Sub-second Latency</div>
+                </div>
+            </div>
+
+            <div class="arrow-down">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M12 5v14M5 12l7 7 7-7"/>
+                </svg>
+            </div>
+
+            <!-- Snowflake Platform -->
+            <div class="layer">
+                <span class="layer-label">SNOWFLAKE</span>
+                <div class="component snowflake">
+                    <svg class="snowflake-logo" viewBox="0 0 100 100" fill="white">
+                        <path d="M50 5 L50 95 M5 50 L95 50 M15 15 L85 85 M85 15 L15 85" stroke="white" stroke-width="8" stroke-linecap="round"/>
+                        <circle cx="50" cy="5" r="8" fill="white"/>
+                        <circle cx="50" cy="95" r="8" fill="white"/>
+                        <circle cx="5" cy="50" r="8" fill="white"/>
+                        <circle cx="95" cy="50" r="8" fill="white"/>
+                        <circle cx="15" cy="15" r="6" fill="white"/>
+                        <circle cx="85" cy="85" r="6" fill="white"/>
+                        <circle cx="85" cy="15" r="6" fill="white"/>
+                        <circle cx="15" cy="85" r="6" fill="white"/>
+                        <circle cx="50" cy="50" r="12" fill="white"/>
+                    </svg>
+                    <div class="component-name">FLIGHT_EVENTS_STREAMING</div>
+                    <div class="component-detail">69M+ Events | 16.1 GB</div>
+                </div>
+            </div>
+
+            <div class="arrow-down">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M12 5v14M5 12l7 7 7-7"/>
+                </svg>
+            </div>
+
+            <!-- Analytics & AI Layer -->
+            <div class="layer">
+                <span class="layer-label">ANALYTICS & AI</span>
+                <div class="component">
+                    <div class="icon">📊</div>
+                    <div class="component-name">Dynamic Tables</div>
+                    <div class="component-detail">Real-time Aggregations</div>
+                </div>
+                <div class="component primary">
+                    <div class="icon">🤖</div>
+                    <div class="component-name">Cortex AI</div>
+                    <div class="component-detail">LLM Analytics</div>
+                </div>
+                <div class="component">
+                    <div class="icon">🔍</div>
+                    <div class="component-name">Cortex Search</div>
+                    <div class="component-detail">Semantic Search</div>
+                </div>
+            </div>
+
+            <div class="arrow-down">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M12 5v14M5 12l7 7 7-7"/>
+                </svg>
+            </div>
+
+            <!-- Application Layer -->
+            <div class="layer">
+                <span class="layer-label">APPLICATION</span>
+                <div class="component snowflake">
+                    <div class="icon" style="color: white;">⚛️</div>
+                    <div class="component-name">React Dashboard</div>
+                    <div class="component-detail">SPCS Container Service</div>
+                </div>
+            </div>
+        </div>
+
+        <hr class="section-divider">
+
+        <!-- Cost Metrics -->
+        <div class="metrics-box">
+            <div class="metrics-title">💰 Snowpipe Streaming Cost Analysis</div>
+            <div class="metrics-grid">
+                <div class="metric">
+                    <div class="metric-value">69M+</div>
+                    <div class="metric-label">Total Events Ingested</div>
+                </div>
+                <div class="metric">
+                    <div class="metric-value">13,116</div>
+                    <div class="metric-label">Events/Second</div>
+                </div>
+                <div class="metric">
+                    <div class="metric-value">16.1 GB</div>
+                    <div class="metric-label">Data Ingested</div>
+                </div>
+                <div class="metric">
+                    <div class="metric-value">$4.98</div>
+                    <div class="metric-label">Total Streaming Cost</div>
+                </div>
+                <div class="metric">
+                    <div class="metric-value">$0.072</div>
+                    <div class="metric-label">Cost per Million Rows</div>
+                </div>
+                <div class="metric">
+                    <div class="metric-value">$0.31</div>
+                    <div class="metric-label">Cost per GB</div>
+                </div>
+                <div class="metric">
+                    <div class="metric-value">88 min</div>
+                    <div class="metric-label">Streaming Duration</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Key Benefits -->
+        <div class="metrics-box" style="margin-top: 20px; background: white;">
+            <div class="metrics-title">✨ Key Benefits of Snowpipe Streaming</div>
+            <div class="metrics-grid">
+                <div class="metric">
+                    <div class="metric-value" style="font-size: 1.4rem;">⚡ Sub-Second</div>
+                    <div class="metric-label">End-to-End Latency</div>
+                </div>
+                <div class="metric">
+                    <div class="metric-value" style="font-size: 1.4rem;">🚫 No Warehouse</div>
+                    <div class="metric-label">Serverless Ingestion</div>
+                </div>
+                <div class="metric">
+                    <div class="metric-value" style="font-size: 1.4rem;">📈 Auto-Scale</div>
+                    <div class="metric-label">Handles Bursts</div>
+                </div>
+                <div class="metric">
+                    <div class="metric-value" style="font-size: 1.4rem;">💵 Pay-per-Row</div>
+                    <div class="metric-label">No Idle Costs</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
