@@ -3,11 +3,16 @@
 -- =============================================================================
 -- This script sets up the infrastructure for real-time flight status ingestion
 -- using Snowpipe Streaming via Kafka Connector.
+--
+-- Session variables (set by deploy.sh):
+--   $FULL_PREFIX, $PROJECT_ROLE
 -- =============================================================================
 
-USE ROLE PHANTOM_IROPS_ADMIN;
-USE DATABASE PHANTOM_IROPS;
-USE WAREHOUSE PHANTOM_IROPS_WH;
+SET WAREHOUSE_NAME = $FULL_PREFIX || '_WH';
+
+USE ROLE IDENTIFIER($PROJECT_ROLE);
+USE DATABASE IDENTIFIER($FULL_PREFIX);
+USE WAREHOUSE IDENTIFIER($WAREHOUSE_NAME);
 
 -- =============================================================================
 -- 1. FLIGHT_STATUS_EVENTS TABLE
@@ -64,7 +69,7 @@ COMMENT ON STREAM RAW.FLIGHT_EVENTS_STREAM IS
 -- Uses QUALIFY to get latest event per flight before merging.
 
 CREATE OR REPLACE TASK RAW.MERGE_FLIGHT_EVENTS
-    WAREHOUSE = PHANTOM_IROPS_WH
+    WAREHOUSE = IDENTIFIER($WAREHOUSE_NAME)
     SCHEDULE = '1 MINUTE'
     WHEN SYSTEM$STREAM_HAS_DATA('RAW.FLIGHT_EVENTS_STREAM')
 AS
@@ -135,8 +140,8 @@ COMMENT ON VIEW RAW.V_LATEST_FLIGHT_EVENTS IS
 -- 5. GRANTS FOR STREAMING OBJECTS
 -- =============================================================================
 
-GRANT SELECT ON TABLE RAW.FLIGHT_STATUS_EVENTS TO ROLE PHANTOM_IROPS_ANALYST;
-GRANT SELECT ON VIEW RAW.V_LATEST_FLIGHT_EVENTS TO ROLE PHANTOM_IROPS_ANALYST;
+GRANT SELECT ON TABLE RAW.FLIGHT_STATUS_EVENTS TO ROLE IDENTIFIER($PROJECT_ROLE);
+GRANT SELECT ON VIEW RAW.V_LATEST_FLIGHT_EVENTS TO ROLE IDENTIFIER($PROJECT_ROLE);
 
 -- =============================================================================
 -- VERIFICATION

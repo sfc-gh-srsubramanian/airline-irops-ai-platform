@@ -181,7 +181,22 @@ ORDER BY
 "
 
 echo -e "${BLUE}────────────────────────────────────────────────────────────${NC}"
-echo -e "${BLUE}9. SPCS Service Status${NC}"
+echo -e "${BLUE}9. Snowpipe Streaming Infrastructure${NC}"
+echo -e "${BLUE}────────────────────────────────────────────────────────────${NC}"
+
+run_query "Checking streaming events table" "
+SELECT 
+    'FLIGHT_STATUS_EVENTS' AS object_name,
+    COUNT(*) AS row_count
+FROM RAW.FLIGHT_STATUS_EVENTS;
+"
+
+run_query "Checking merge task status" "
+SHOW TASKS LIKE 'MERGE_FLIGHT_EVENTS' IN SCHEMA RAW;
+"
+
+echo -e "${BLUE}────────────────────────────────────────────────────────────${NC}"
+echo -e "${BLUE}10. SPCS Service Status${NC}"
 echo -e "${BLUE}────────────────────────────────────────────────────────────${NC}"
 
 echo -e "${YELLOW}► Checking SPCS dashboard status...${NC}"
@@ -208,7 +223,7 @@ fi
 echo ""
 
 echo -e "${BLUE}────────────────────────────────────────────────────────────${NC}"
-echo -e "${BLUE}10. AI Function Test${NC}"
+echo -e "${BLUE}11. AI Function Test${NC}"
 echo -e "${BLUE}────────────────────────────────────────────────────────────${NC}"
 
 run_query "Testing Contract Bot query" "
@@ -231,6 +246,7 @@ echo -e "  ✓ Disruption tracking operational"
 echo -e "  ✓ Crew availability tracking active"
 echo -e "  ✓ AI functions responding"
 echo -e "  ✓ Rebooking options available"
+echo -e "  ✓ Snowpipe Streaming infrastructure deployed"
 echo -e "  ✓ SPCS service check completed"
 echo ""
 echo -e "To run sample queries: ${YELLOW}snow sql -c ${CONNECTION_NAME} -f scripts/09_sample_queries.sql${NC}"

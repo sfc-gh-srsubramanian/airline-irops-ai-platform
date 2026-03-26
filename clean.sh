@@ -69,6 +69,11 @@ echo -e "${YELLOW}► Dropping compute pool ${FULL_PREFIX}_POOL (if exists)...${
 run_sql "DROP COMPUTE POOL IF EXISTS ${FULL_PREFIX}_POOL;"
 echo -e "${GREEN}  ✓ Compute pool dropped${NC}"
 
+# Suspend running tasks (tasks can block database drops)
+echo -e "${YELLOW}► Suspending running tasks...${NC}"
+run_sql "ALTER TASK IF EXISTS ${FULL_PREFIX}.RAW.MERGE_FLIGHT_EVENTS SUSPEND;"
+echo -e "${GREEN}  ✓ Tasks suspended${NC}"
+
 # Drop database (this drops all objects inside)
 echo -e "${YELLOW}► Dropping database ${FULL_PREFIX}...${NC}"
 run_sql "DROP DATABASE IF EXISTS ${FULL_PREFIX};"

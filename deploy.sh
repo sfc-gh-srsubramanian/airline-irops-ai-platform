@@ -135,11 +135,17 @@ echo -e "${BLUE}Phase 8: Cortex AI Functions${NC}"
 echo -e "${BLUE}────────────────────────────────────────────────────────────${NC}"
 run_sql_file "${SCRIPT_DIR}/scripts/08_cortex_ai_functions.sql" "Creating AI functions and Contract Bot"
 
-# Phase 9: SPCS Deployment (optional)
+echo ""
+echo -e "${BLUE}────────────────────────────────────────────────────────────${NC}"
+echo -e "${BLUE}Phase 9: Snowpipe Streaming Infrastructure${NC}"
+echo -e "${BLUE}────────────────────────────────────────────────────────────${NC}"
+run_sql_file "${SCRIPT_DIR}/scripts/10_snowpipe_streaming.sql" "Creating streaming tables, streams, tasks, and views"
+
+# Phase 10: SPCS Deployment (optional)
 if [ "${DEPLOY_SPCS}" = "yes" ]; then
     echo ""
     echo -e "${BLUE}────────────────────────────────────────────────────────────${NC}"
-    echo -e "${BLUE}Phase 9: SPCS Dashboard Deployment${NC}"
+    echo -e "${BLUE}Phase 10: SPCS Dashboard Deployment${NC}"
     echo -e "${BLUE}────────────────────────────────────────────────────────────${NC}"
     
     REACT_APP_DIR="${SCRIPT_DIR}/react-app"
@@ -221,6 +227,7 @@ echo -e "  • 3 Intelligence Agents"
 echo -e "  • Rebooking Options table for passenger prioritization"
 echo -e "  • ML infrastructure (Feature Store + Model Registry ready)"
 echo -e "  • 10+ Cortex AI Functions"
+echo -e "  • Snowpipe Streaming infrastructure (events table, stream, merge task)"
 if [ "${DEPLOY_SPCS}" = "yes" ]; then
     echo -e "  • SPCS Dashboard Service (irops-dashboard)"
 fi
